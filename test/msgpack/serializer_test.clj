@@ -5,4 +5,4 @@
 
 (deftest nil-test
   (testing "nil"
-    (is (byte-literals [0xc0]) (serialize nil))))
+    (is (= (byte-literals [0xc0]) (serialize nil)))))

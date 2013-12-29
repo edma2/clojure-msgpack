@@ -3,4 +3,4 @@
 
 (defmulti serialize class)
 
-(defmethod serialize nil [_] nil)
+(defmethod serialize nil [_] (byte-literals [0xc0]))

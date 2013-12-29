@@ -4,7 +4,7 @@
 (ns msgpack.utils)
 
 (defn byte-literal [x]
-  (if (> 127 x)
+  (if (> x 127)
     (byte (- x 256))
     (byte x)))
 
