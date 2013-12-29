@@ -6,7 +6,7 @@ clojure-msgpack is a library for
 
 ## Usage
 
-=> (require ['msgpack.core :as 'msgpack])
+=> (require '[msgpack.core :as msgpack])
 
 ; Returns a Seq of java.lang.Byte
 => (msgpack/serialize {:compact true :schema 0})
