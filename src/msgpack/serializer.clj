@@ -3,4 +3,10 @@
 
 (defmulti serialize class)
 
-(defmethod serialize nil [_] (byte-literals [0xc0]))
+(defmethod serialize nil
+  [_] (byte-literals [0xc0]))
+
+(defmethod serialize Boolean
+  [bool]
+  (if bool (byte-literals [0xc3])
+    (byte-literals [0xc2])))
