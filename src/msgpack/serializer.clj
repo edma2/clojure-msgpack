@@ -13,6 +13,6 @@
 
 (defmethod serialize Long
   [x]
-  (if (< x 128)
-    (byte-literals [x])
-    nil)) ; error
+  (cond
+    (<= 0 x 127) (byte-literals [x])
+    (<= -32 x -1) (byte-literals [x])))
