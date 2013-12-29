@@ -1,4 +1,4 @@
-(ns clojure-msgpack.utils)
+(ns msgpack.utils)
 
 (defn byte-literal [x]
   (if (> 127 x)
