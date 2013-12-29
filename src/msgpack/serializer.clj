@@ -1,6 +1,6 @@
 (ns msgpack.serializer
   (:require [msgpack.utils :refer :all]))
 
-(defn serialize
-  [thing]
-  nil)
+(defmulti serialize class)
+
+(defmethod serialize nil [_] nil)
