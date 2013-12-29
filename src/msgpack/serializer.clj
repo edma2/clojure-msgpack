@@ -10,3 +10,9 @@
   [bool]
   (if bool (byte-literals [0xc3])
     (byte-literals [0xc2])))
+
+(defmethod serialize Long
+  [x]
+  (if (< x 128)
+    (byte-literals [x])
+    nil)) ; error
