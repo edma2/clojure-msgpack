@@ -17,6 +17,7 @@
   (conj (int-bytes (bit-shift-right x 8) (dec n))
         (byte-literal (bit-and 0xff x)))))
 
+; TODO: 64-bit int/uint
 (defmethod serialize Long
   [x]
   (cond
