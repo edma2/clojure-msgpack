@@ -1,6 +1,6 @@
-(ns clojure-msgpack.core-test
+(ns clojure-msgpack.serializer-test
   (:require [clojure.test :refer :all]
-            [clojure-msgpack.core :refer :all]))
+            [clojure-msgpack.serializer :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
