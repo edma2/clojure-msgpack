@@ -19,4 +19,7 @@
     (is (= (byte-literals [0x7f]) (serialize 0x7f)))
     (is (= (byte-literals [0xff]) (serialize -1)))
     (is (= (byte-literals [0xf0]) (serialize -16)))
-    (is (= (byte-literals [0xe0]) (serialize -32)))))
+    (is (= (byte-literals [0xe0]) (serialize -32)))
+    (is (= (byte-literals [0xcc 0x80]) (serialize 0x80)))
+    (is (= (byte-literals [0xcc 0xf0]) (serialize 0xf0)))
+    (is (= (byte-literals [0xcc 0xff]) (serialize 0xff)))))
