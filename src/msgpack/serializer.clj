@@ -41,3 +41,9 @@
 (defmethod serialize Integer [x] (serialize (long x)))
 (defmethod serialize Short [x] (serialize (long x)))
 (defmethod serialize Byte [x] (serialize (long x)))
+
+(defmethod serialize Double [n]
+  (with-header 0xcb (get-double-bytes n)))
+
+(defmethod serialize Float [n]
+  (with-header 0xca (get-float-bytes n)))

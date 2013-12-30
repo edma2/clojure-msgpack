@@ -20,3 +20,5 @@
 (defn get-short-bytes [x] (get-bytes #(.writeShort %1 %2) x))
 (defn get-int-bytes [x] (get-bytes #(.writeInt %1 %2) x))
 (defn get-long-bytes [x] (get-bytes #(.writeLong %1 %2) x))
+(defn get-float-bytes [n] (get-bytes #(.writeFloat %1 %2) n))
+(defn get-double-bytes [n] (get-bytes #(.writeDouble %1 %2) n))
