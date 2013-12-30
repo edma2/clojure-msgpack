@@ -4,15 +4,15 @@
 (defmulti serialize class)
 
 (defmethod serialize nil
-  [_] (byte-literals [0xc0]))
+  [_] (unsigned-bytes [0xc0]))
 
 (defmethod serialize Boolean
   [bool]
-  (if bool (byte-literals [0xc3])
-    (byte-literals [0xc2])))
+  (if bool (unsigned-bytes [0xc3])
+    (unsigned-bytes [0xc2])))
 
 (defn- with-header [h bseq]
-  (cons (byte-literal h) bseq))
+  (cons (unsigned-byte h) bseq))
 
 (defmethod serialize Long
   [x]
