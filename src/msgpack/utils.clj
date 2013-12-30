@@ -9,7 +9,7 @@
   (map unsigned-byte xs))
 
 (defn- get-bytes
-  "Convert primitives to their byte representations"
+  "Convert a Java primitive to its byte representation."
   [write x]
   (let [output-stream (new ByteArrayOutputStream)
         data-output (new DataOutputStream output-stream)]
