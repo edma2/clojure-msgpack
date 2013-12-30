@@ -8,8 +8,8 @@
 (defn unsigned-bytes [xs]
   (map unsigned-byte xs))
 
-;; Functions for converting integer values to byte Seqs.
 (defn- get-bytes
+  "Convert primitives to their byte representations"
   [write x]
   (let [output-stream (new ByteArrayOutputStream)
         data-output (new DataOutputStream output-stream)]
