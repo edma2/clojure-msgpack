@@ -6,16 +6,16 @@ clojure-msgpack is a library for
 
 ## Usage
 
-=> (require '[msgpack.core :as msgpack])
-
+```
+(require '[msgpack.core :as msgpack])
 ; Returns a Seq of java.lang.Byte
-=> (msgpack/serialize {:compact true :schema 0})
-
+(msgpack/serialize {:compact true :schema 0})
 ; Accepts a Seq of java.lang.Byte
-=> (msgpack/deserialize raw-bytes)
+(msgpack/deserialize raw-bytes)
+```
 
-When serializing, the most compact representation of the clojure object is
-chosen.
+If there are multiple ways of serializing a Clojure object the most compact
+form is chosen.
 
 ## License
 
