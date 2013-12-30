@@ -1,12 +1,36 @@
-;; Utilities for specifying bytes as if they were hex literals.
-;; Ex. (byte 0xc0) will produce a cast error. (byte-literal 0xc0) will perform
-;; the required math needed to fit the bit-pattern 0xc0 into a Java byte.
-(ns msgpack.utils)
+(ns msgpack.utils
+  (:import java.io.ByteArrayOutputStream)
+  (:import java.io.DataOutputStream))
 
-(defn byte-literal [x]
-  (if (> x 127)
-    (byte (- x 256))
-    (byte x)))
+;; Functions for converting unsigned integer values to signed values with
+;; equivalent bit patterns.
+;; Example:
+;;   value is 0x80000000 which exceeds a 32-bit signed int
+;;   bit-equivalent signed value is -0x80000000
+(defn as-signed-byte [x]
+  (byte (if (> x 0x7f) (- x 0x100) x)))
 
-(defn byte-literals [xs]
-  (map byte-literal xs))
+(defn as-signed-short [x]
+  (short (if (> x 0x7fff) (- x 0x10000) x)))
+
+(defn as-signed-int [x]
+  (int (if (> x 0x7fffffff) (- x 0x100000000) x)))
+
+(defn as-signed-long [x]
+  (long (if (> x 0x7fffffffffffffff) (- x 0x10000000000000000) x)))
+
+(defn byte-literal [x] (as-signed-byte x))
+(defn byte-literals [xs] (map byte-literal xs))
+
+;; Functions for converting integer values to byte Seqs.
+(defn- get-bytes
+  [write x]
+  (let [output-stream (new ByteArrayOutputStream)
+        data-output (new DataOutputStream output-stream)]
+    (write data-output x)
+    (seq (.toByteArray output-stream))))
+
+(defn get-byte-bytes [x] (get-bytes #(.writeByte %1 %2) x))
+(defn get-short-bytes [x] (get-bytes #(.writeShort %1 %2) x))
+(defn get-int-bytes [x] (get-bytes #(.writeInt %1 %2) x))
+(defn get-long-bytes [x] (get-bytes #(.writeLong %1 %2) x))
