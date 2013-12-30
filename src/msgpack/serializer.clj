@@ -33,6 +33,7 @@
       (cons (byte-literal 0xd3) (int-bytes x 8))))
 
 ; Long can handle up to 2^63-1 integers. MessagePack max is 2^64-1.
+; Clojure coerces values greater than 2^63-1 to BigInts.
 (defmethod serialize clojure.lang.BigInt
   [x]
   (cond
