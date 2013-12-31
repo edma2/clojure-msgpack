@@ -14,9 +14,6 @@ clojure-msgpack is a library for
 (msgpack/deserialize raw-bytes)
 ```
 
-If there are multiple ways of serializing a Clojure object the most compact
-form is chosen.
-
 ## License
 
 Copyright © 2013 FIXME
