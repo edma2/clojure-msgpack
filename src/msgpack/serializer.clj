@@ -47,3 +47,8 @@
 
 (defmethod serialize Float [n]
   (with-header 0xca (get-float-bytes n)))
+
+(defmethod serialize String [s]
+  (let [bseq (seq (.getBytes s))
+        h (bit-or 2r10100000 (count bseq))]
+    (with-header h bseq)))
