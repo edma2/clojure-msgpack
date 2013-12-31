@@ -49,6 +49,14 @@
   (with-header 0xca (get-float-bytes n)))
 
 (defmethod serialize String [s]
-  (let [bseq (seq (.getBytes s))
-        h (bit-or 2r10100000 (count bseq))]
-    (with-header h bseq)))
+  (let [sbytes (seq (.getBytes s))
+        len (count sbytes)]
+    (cond
+      (<= len 0x1f)
+        (with-header (bit-or 2r10100000 len) sbytes)
+      (<= len 0xff)
+        (with-header 0xd9 (concat (get-byte-bytes len) sbytes))
+      (<= len 0xffff)
+        (with-header 0xda (concat (get-short-bytes len) sbytes))
+      (<= len 0xffffffff)
+        (with-header 0xdb (concat (get-int-bytes len) sbytes)))))
