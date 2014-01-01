@@ -49,7 +49,7 @@
   (ubyte-array (cons 0xcb (get-double-bytes n))))
 
 (defmethod serialize String [s]
-  (let [data (seq (.getBytes s))
+  (let [data (.getBytes s)
         size (count data)]
     (cond
       (<= size 0x1f)
