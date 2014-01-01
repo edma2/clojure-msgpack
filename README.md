@@ -1,18 +1,20 @@
 # clojure-msgpack
 
 clojure-msgpack is a library for
-* serializing native Clojure data structures as MessagePack byte sequences.
-* deserializing MessagePack byte sequences into native Clojure data structures.
+* serializing native Clojure data structures as MessagePack byte arrays.
+* deserializing MessagePack byte arrays into native Clojure data structures.
 
 ## Usage
 
 ```clojure
 (require '[msgpack.core :as msgpack])
-; Returns a Seq of java.lang.Byte
-(msgpack/serialize {:compact true :schema 0})
-; Accepts a Seq of java.lang.Byte
-(msgpack/deserialize raw-bytes)
+(msgpack/serialize {:compact true :schema 0}) ; Returns an array of bytes
+(msgpack/deserialize raw-bytes) ; Accepts an array of bytes
 ```
+
+clojure-msgpack supports extension types.
+To use, simply extend the msgpack.proto/Extension protocol, which defines ```ext-data``` and ```ext-type```.
+Read more about MessagePack extension types here: https://github.com/msgpack/msgpack/blob/master/spec.md#formats-ext)
 
 ## License
 
