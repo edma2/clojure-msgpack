@@ -14,8 +14,8 @@
 (defn- get-bytes
   "Convert a Java primitive to its byte representation."
   [write x]
-  (let [output-stream (new ByteArrayOutputStream)
-        data-output (new DataOutputStream output-stream)]
+  (let [output-stream (ByteArrayOutputStream.)
+        data-output (DataOutputStream. output-stream)]
     (write data-output x)
     (.toByteArray output-stream)))
 
