@@ -113,13 +113,13 @@
     (serializes-as [[]] [0x91 0x90])
     (serializes-as [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3]))
   (testing "array 16"
-    (serializes-as (repeat 16 0x5)
-                   (concat [0xdc 0x00 0x10] (repeat 16 (byte 0x5))))
-    (serializes-as (repeat 65535 0x5)
-                   (concat [0xdc 0xff 0xff] (repeat 65535 (byte 0x5)))))
+    (serializes-as (repeat 16 5)
+                   (concat [0xdc 0x00 0x10] (repeat 16 5)))
+    (serializes-as (repeat 65535 5)
+                   (concat [0xdc 0xff 0xff] (repeat 65535 5))))
   (testing "array 32"
-    (serializes-as (repeat 65536 0x5)
-                   (concat [0xdd 0x00 0x01 0x00 0x00] (repeat 65536 (byte 0x5))))))
+    (serializes-as (repeat 65536 5)
+                   (concat [0xdd 0x00 0x01 0x00 0x00] (repeat 65536 5)))))
 
 (deftest map-test
   (testing "fixmap"
