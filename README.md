@@ -18,10 +18,9 @@ clojure-msgpack is a library for
   (ext-type [_] 1)
   (ext-data [this] (.getBytes (:name this))))
 
-(def bob (Person. "Bob"))
-
-(def bytes (msgpack/serialize bob))
-(map #(format "0x%x" %) bytes)
+(let [bob (Person. "Bob")
+      bytes (msgpack/serialize bob)]
+  (map #(format "0x%x" %) bytes))
 ; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
 ```
 
