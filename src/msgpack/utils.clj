@@ -2,14 +2,14 @@
   (:import java.io.ByteArrayOutputStream)
   (:import java.io.DataOutputStream))
 
-(defn unsigned-byte [x]
+(defn ubyte [x]
   (byte (if (> x 0x7f) (- x 0x100) x)))
 
-(defn unsigned-bytes [xs]
-  (map unsigned-byte xs))
+(defn ubytes [xs]
+  (map ubyte xs))
 
 (defn ubyte-array [xs]
-  (byte-array (unsigned-bytes xs)))
+  (byte-array (ubytes xs)))
 
 (defn- get-bytes
   "Convert a Java primitive to its byte representation."
