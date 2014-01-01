@@ -38,7 +38,7 @@
 (defmethod serialize clojure.lang.BigInt
   [x]
   (if (<= 0x8000000000000000 x 0xffffffffffffffff)
-    ; Extracts meaningful bits and drops sign.
+    ;; Extracts meaningful bits and drops sign.
     (ubyte-array (cons 0xcf (get-long-bytes (.longValue x))))
     (serialize (.longValue x))))
 
@@ -99,7 +99,8 @@
   (let [type (ext-type ext)
         data (ext-data ext)
         size (count data)]
-    (assert (<= 0 type 127)) ; negative types are reserved for future use
+    ;; Negative types are reserved for future use
+    (assert (<= 0 type 127))
     (cond
       (= size 1)           (ubyte-array (concat [0xd4 type] data))
       (= size 2)           (ubyte-array (concat [0xd5 type] data))
