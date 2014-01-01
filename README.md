@@ -10,11 +10,18 @@ clojure-msgpack is a library for
 (require '[msgpack.core :as msgpack])
 (msgpack/serialize {:compact true :schema 0}) ; Returns an array of bytes
 (msgpack/deserialize raw-bytes) ; Accepts an array of bytes
-```
 
-clojure-msgpack supports extension types.
-To use, simply extend the msgpack.proto/Extension protocol, which defines ```ext-data``` and ```ext-type```.
-Read more about MessagePack extension types here: https://github.com/msgpack/msgpack/blob/master/spec.md#formats-ext)
+(defrecord Person [name]
+  Extension
+  (ext-type [_] 1)
+  (ext-data [this] (.getBytes (:name this))))
+
+(def bob (Person. "Bob"))
+
+(def bytes (msgpack/serialize bob))
+(map #(format "0x%x" %) bytes)
+; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
+```
 
 ## License
 
