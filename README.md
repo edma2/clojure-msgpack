@@ -9,8 +9,9 @@ clojure-msgpack is a library for
 ```clojure
 (require '[msgpack.core :as msgpack])
 (require '[msgpack.proto :refer :all])
-(msgpack/serialize {:compact true :schema 0}) ; Returns an array of bytes
-(msgpack/deserialize raw-bytes) ; Accepts an array of bytes
+
+(msgpack/serialize {:compact true :schema 0})
+; #<byte[] [B@5984b649>
 
 (defrecord Person [name]
   Extension
