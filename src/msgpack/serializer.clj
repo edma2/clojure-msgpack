@@ -1,5 +1,6 @@
 (ns msgpack.serializer
-  (:require [msgpack.utils :refer :all]))
+  (:require [msgpack.utils :refer :all])
+  (:require [msgpack.proto :refer :all]))
 
 (defmulti serialize class)
 
@@ -98,3 +99,20 @@
         (ubyte-array (concat [0xde] (get-short-bytes size) data))
       (<= size 0xffffffff)
         (ubyte-array (concat [0xdf] (get-int-bytes size) data)))))
+
+(prefer-method serialize (:on-interface Extension) ::map)
+(defmethod serialize (:on-interface Extension)
+  [ext]
+  (let [type (ext-type ext)
+        data (ext-data ext)
+        size (count data)]
+    (assert (<= 0 type 127)) ; negative types are reserved for future use
+    (cond
+      (= size 1) (ubyte-array (concat [0xd4 type] data))
+      (= size 2) (ubyte-array (concat [0xd5 type] data))
+      (= size 4) (ubyte-array (concat [0xd6 type] data))
+      (= size 8) (ubyte-array (concat [0xd7 type] data))
+      (= size 16) (ubyte-array (concat [0xd8 type] data))
+      (<= size 0xff) (ubyte-array (concat (cons 0xc7 (get-byte-bytes size)) (cons type data)))
+      (<= size 0xffff) (ubyte-array (concat (cons 0xc8 (get-short-bytes size)) (cons type data)))
+      (<= size 0xffffffff) (ubyte-array (concat (cons 0xc9 (get-int-bytes size)) (cons type data))))))

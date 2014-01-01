@@ -1,6 +1,7 @@
 (ns msgpack.serializer-test
   (:require [clojure.test :refer :all]
             [msgpack.utils :refer :all]
+            [msgpack.proto :refer :all]
             [msgpack.serializer :refer :all]))
 
 (defmacro serializes-as [thing bseq]
@@ -133,3 +134,8 @@
     (serializes-as (zipmap (range 0 16) (repeat 16 5))
                    (concat [0xde 0x00 0x10]
                            (interleave (range 0 16) (repeat 16 5))))))
+
+(deftest ext-test
+  (testing "ext 8"
+    (serializes-as (reify Extension (ext-type [this] 55) (ext-data [this] [0x1 0x3 0x11]))
+                   [0xc7 0x3 0x37 0x1 0x3 0x11])))
