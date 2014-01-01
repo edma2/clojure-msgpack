@@ -91,9 +91,6 @@
     (serializes-as (fill-str 65536 \b)
                    (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
 
-(defn- ubyte-array [xs]
-  (into-array (unsigned-bytes xs)))
-
 (deftest bin-test
   (testing "bin 8"
     (serializes-as (byte-array nil) [0xc4 0x00])

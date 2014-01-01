@@ -8,6 +8,9 @@
 (defn unsigned-bytes [xs]
   (map unsigned-byte xs))
 
+(defn ubyte-array [xs]
+  (byte-array (unsigned-bytes xs)))
+
 (defn- get-bytes
   "Convert a Java primitive to its byte representation."
   [write x]
