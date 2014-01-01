@@ -60,3 +60,24 @@
         (with-header 0xda (concat (get-short-bytes len) sbytes))
       (<= len 0xffffffff)
         (with-header 0xdb (concat (get-int-bytes len) sbytes)))))
+
+(defn- serialize-bytes
+  "Underlying implementation that works for either unboxed [B or boxed byte
+  arrays [Ljava.lang.Byte."
+  [bytes]
+  (let [len (count bytes)]
+    (cond
+      (<= len 0xff)
+        (with-header 0xc4 (concat (get-byte-bytes len) bytes))
+      (<= len 0xffff)
+        (with-header 0xc5 (concat (get-short-bytes len) bytes))
+      (<= len 0xffffffff)
+        (with-header 0xc6 (concat (get-int-bytes len) bytes)))))
+
+(defmethod serialize (class (java.lang.reflect.Array/newInstance Byte 0))
+  [bytes]
+  (serialize-bytes bytes))
+
+(defmethod serialize (class (byte-array nil))
+  [bytes]
+  (serialize-bytes bytes))

@@ -3,8 +3,8 @@
             [msgpack.utils :refer :all]
             [msgpack.serializer :refer :all]))
 
-(defn- serializes-as [thing bseq]
-  (is (= (unsigned-bytes bseq) (serialize thing))))
+(defmacro serializes-as [thing bseq]
+  `(is (= (unsigned-bytes ~bseq) (serialize ~thing))))
 
 (deftest nil-test
   (testing "nil"
@@ -66,6 +66,42 @@
     (serializes-as 2.5 [0xcb 0x40 0x04 0x00 0x00 0x00 0x00 0x00 0x00])
     (serializes-as (Math/pow 10 35) [0xcb 0x47 0x33 0x42 0x61 0x72 0xc7 0x4d 0x82])))
 
+(defn- fill-str [n c]
+  (clojure.string/join "" (repeat n c)))
+
 (deftest str-test
   (testing "fixstr"
-    (serializes-as "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])))
+    (serializes-as "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
+    (serializes-as "" [0xa0])
+    (serializes-as "abc" [0xa3 0x61 0x62 0x63])
+    (serializes-as (fill-str 31 \a) (cons 0xbf (repeat 31 0x61))))
+  (testing "str 8"
+    (serializes-as (fill-str 32 \b)
+                   (concat [0xd9 0x20] (repeat 32 (byte \b))))
+    (serializes-as (fill-str 100 \c)
+                   (concat [0xd9 0x64] (repeat 100 (byte \c))))
+    (serializes-as (fill-str 255 \d)
+                   (concat [0xd9 0xff] (repeat 255 (byte \d)))))
+  (testing "str 16"
+    (serializes-as (fill-str 256 \b)
+                   (concat [0xda 0x01 0x00] (repeat 256 (byte \b))))
+    (serializes-as (fill-str 65535 \c)
+                   (concat [0xda 0xff 0xff] (repeat 65535 (byte \c)))))
+  (testing "str 32"
+    (serializes-as (fill-str 65536 \b)
+                   (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
+
+(defn- ubyte-array [xs]
+  (into-array (unsigned-bytes xs)))
+
+(deftest bin-test
+  (testing "bin 8"
+    (serializes-as (byte-array nil) [0xc4 0x00])
+    (serializes-as (ubyte-array [0x80]) [0xc4 0x01 0x80])
+    (serializes-as (ubyte-array (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
+    (serializes-as (ubyte-array (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
+  (testing "bin 16"
+    (serializes-as (ubyte-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+  (testing "bin 32"
+    (serializes-as (ubyte-array (repeat 65536 0x80))
+                   (concat [0xc6 0x00 0x01 0x00 0x00] (repeat  65536 0x80)))))
