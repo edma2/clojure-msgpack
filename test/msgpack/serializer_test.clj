@@ -110,6 +110,7 @@
   (testing "fixarray"
     (serializes-as '() [0x90])
     (serializes-as [] [0x90])
+    (serializes-as [[]] [0x91 0x90])
     (serializes-as [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3]))
   (testing "array 16"
     (serializes-as (repeat 16 0x5)
