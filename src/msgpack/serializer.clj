@@ -53,17 +53,17 @@
   (with-header 0xcb (get-double-bytes n)))
 
 (defmethod serialize String [s]
-  (let [sbytes (seq (.getBytes s))
-        len (count sbytes)]
+  (let [body (seq (.getBytes s))
+        len (count body)]
     (cond
       (<= len 0x1f)
-        (with-header (bit-or 2r10100000 len) sbytes)
+        (with-header (bit-or 2r10100000 len) body)
       (<= len 0xff)
-        (with-header 0xd9 (concat (get-byte-bytes len) sbytes))
+        (with-header 0xd9 (concat (get-byte-bytes len) body))
       (<= len 0xffff)
-        (with-header 0xda (concat (get-short-bytes len) sbytes))
+        (with-header 0xda (concat (get-short-bytes len) body))
       (<= len 0xffffffff)
-        (with-header 0xdb (concat (get-int-bytes len) sbytes)))))
+        (with-header 0xdb (concat (get-int-bytes len) body)))))
 
 (derive (class (java.lang.reflect.Array/newInstance Byte 0)) ::byte-array)
 (derive (class (byte-array nil)) ::byte-array)
