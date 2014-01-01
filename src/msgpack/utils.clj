@@ -1,6 +1,6 @@
 (ns msgpack.utils
-  (:import java.io.ByteArrayOutputStream)
-  (:import java.io.DataOutputStream))
+  (:import java.io.ByteArrayOutputStream
+           java.io.DataOutputStream))
 
 (defn ubyte [x]
   (byte (if (> x 0x7f) (- x 0x100) x)))

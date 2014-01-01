@@ -1,6 +1,6 @@
 (ns msgpack.serializer
-  (:require [msgpack.utils :refer :all])
-  (:require [msgpack.proto :refer :all]))
+  (:require [msgpack.utils :refer :all]
+            [msgpack.proto :refer :all]))
 
 (defmulti serialize class)
 
