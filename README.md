@@ -8,6 +8,7 @@ clojure-msgpack is a library for
 
 ```clojure
 (require '[msgpack.core :as msgpack])
+(require '[msgpack.proto :refer :all])
 (msgpack/serialize {:compact true :schema 0}) ; Returns an array of bytes
 (msgpack/deserialize raw-bytes) ; Accepts an array of bytes
 
