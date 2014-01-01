@@ -129,4 +129,8 @@
     (serializes-as {"abc" 5} [0x81 0xa3 0x61 0x62 0x63 0x05])
     (serializes-as {(ubyte-array [0x80]) 0xffff}
                    [0x81 0xc4 0x01 0x80 0xcd 0xff 0xff])
-    (serializes-as {true nil} [0x81 0xc3 0xc0])))
+    (serializes-as {true nil} [0x81 0xc3 0xc0]))
+  (testing "map 16"
+    (serializes-as (zipmap (range 0 16) (repeat 16 5))
+                   (concat [0xde 0x00 0x10]
+                           (interleave (range 0 16) (repeat 16 5))))))
