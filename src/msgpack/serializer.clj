@@ -48,6 +48,12 @@
 (defmethod serialize Double [n]
   (ubyte-array (cons 0xcb (get-double-bytes n))))
 
+(defmethod serialize clojure.lang.Keyword [k]
+  (serialize (name k)))
+
+(defmethod serialize clojure.lang.Symbol [s]
+  (serialize (name s)))
+
 (defmethod serialize String [s]
   (let [data (.getBytes s)
         size (count data)]
