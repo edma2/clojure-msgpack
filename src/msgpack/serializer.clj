@@ -13,8 +13,8 @@
   [_] (ubyte-array [0xc0]))
 
 (defmethod serialize Boolean
-  [bool]
-  (if bool (ubyte-array [0xc3])
+  [b]
+  (if b (ubyte-array [0xc3])
     (ubyte-array [0xc2])))
 
 (derive Byte ::int)
@@ -22,31 +22,31 @@
 (derive Integer ::int)
 (derive Long ::int)
 (defmethod serialize ::int
-  [x]
+  [n]
   (cond
-    (<= 0 x 127)                  (ubyte-array (get-byte-bytes x))
-    (<= -32 x -1)                 (ubyte-array (get-byte-bytes x))
-    (<= 0 x 0xff)                 (ubyte-array (cons 0xcc (get-byte-bytes x)))
-    (<= 0 x 0xffff)               (ubyte-array (cons 0xcd (get-short-bytes x)))
-    (<= 0 x 0xffffffff)           (ubyte-array (cons 0xce (get-int-bytes x)))
-    (<= 0 x 0x7fffffffffffffff)   (ubyte-array (cons 0xcf (get-long-bytes x)))
-    (<= -0x80 x -1)               (ubyte-array (cons 0xd0 (get-byte-bytes x)))
-    (<= -0x8000 x -1)             (ubyte-array (cons 0xd1 (get-short-bytes x)))
-    (<= -0x80000000 x -1)         (ubyte-array (cons 0xd2 (get-int-bytes x)))
-    (<= -0x8000000000000000 x -1) (ubyte-array (cons 0xd3 (get-long-bytes x)))))
+    (<= 0 n 127)                  (ubyte-array (get-byte-bytes n))
+    (<= -32 n -1)                 (ubyte-array (get-byte-bytes n))
+    (<= 0 n 0xff)                 (ubyte-array (cons 0xcc (get-byte-bytes n)))
+    (<= 0 n 0xffff)               (ubyte-array (cons 0xcd (get-short-bytes n)))
+    (<= 0 n 0xffffffff)           (ubyte-array (cons 0xce (get-int-bytes n)))
+    (<= 0 n 0x7fffffffffffffff)   (ubyte-array (cons 0xcf (get-long-bytes n)))
+    (<= -0x80 n -1)               (ubyte-array (cons 0xd0 (get-byte-bytes n)))
+    (<= -0x8000 n -1)             (ubyte-array (cons 0xd1 (get-short-bytes n)))
+    (<= -0x80000000 n -1)         (ubyte-array (cons 0xd2 (get-int-bytes n)))
+    (<= -0x8000000000000000 n -1) (ubyte-array (cons 0xd3 (get-long-bytes n)))))
 
 (defmethod serialize clojure.lang.BigInt
-  [x]
-  (if (<= 0x8000000000000000 x 0xffffffffffffffff)
+  [n]
+  (if (<= 0x8000000000000000 n 0xffffffffffffffff)
     ;; Extracts meaningful bits and drops sign.
-    (ubyte-array (cons 0xcf (get-long-bytes (.longValue x))))
-    (serialize (.longValue x))))
+    (ubyte-array (cons 0xcf (get-long-bytes (.longValue n))))
+    (serialize (.longValue n))))
 
-(defmethod serialize Float [n]
-  (ubyte-array (cons 0xca (get-float-bytes n))))
+(defmethod serialize Float [x]
+  (ubyte-array (cons 0xca (get-float-bytes x))))
 
-(defmethod serialize Double [n]
-  (ubyte-array (cons 0xcb (get-double-bytes n))))
+(defmethod serialize Double [x]
+  (ubyte-array (cons 0xcb (get-double-bytes x))))
 
 (defmethod serialize clojure.lang.Keyword [k]
   (serialize (name k)))
