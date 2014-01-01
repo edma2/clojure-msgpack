@@ -81,3 +81,16 @@
 (defmethod serialize (class (byte-array nil))
   [bytes]
   (serialize-bytes bytes))
+
+; TODO: More general dispatch type?
+(defmethod serialize clojure.lang.Sequential
+  [seq]
+  (let [len (count seq)
+        body (apply concat (map serialize seq))]
+    (cond
+      (<= len 0xf)
+        (with-header (bit-or 2r10010000 len) body)
+      (<= len 0xffff)
+        (with-header 0xdc (concat (get-short-bytes len) body))
+      (<= len 0xffffffff)
+        (with-header 0xdd (concat (get-int-bytes len) body)))))
