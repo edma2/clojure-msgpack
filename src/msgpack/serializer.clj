@@ -99,7 +99,7 @@
   (let [type (ext-type ext)
         data (ext-data ext)
         size (count data)]
-    ;; Negative types are reserved for future use
+    ;; Negative types are reserved for future use.
     (assert (<= 0 type 127))
     (cond
       (= size 1)           (ubyte-array (concat [0xd4 type] data))
