@@ -4,8 +4,10 @@
             [msgpack.proto :refer :all]
             [msgpack.serializer :refer :all]))
 
-(defmacro serializes-as [thing bseq]
-  `(is (= (ubytes ~bseq) (seq (serialize ~thing)))))
+(defmacro serializes-as [thing bytes]
+  `(let [thing# ~thing
+         bytes# ~bytes]
+     (is (= (ubytes bytes#) (seq (serialize thing#))))))
 
 (deftest nil-test
   (testing "nil"
