@@ -8,7 +8,7 @@
   [header body]
   (cons (unsigned-byte header) body))
 
-(defn- concat-serialize
+(defn- serialize-concat
   "Recursively serialize a sequence of items, then concatenate the result."
   [coll]
   (apply concat (map serialize coll)))
@@ -82,7 +82,7 @@
 (defmethod serialize ::array
   [coll]
   (let [len (count coll)
-        body (concat-serialize coll)]
+        body (serialize-concat coll)]
     (cond
       (<= len 0xf)
         (with-header (bit-or 2r10010000 len) body)
@@ -95,7 +95,7 @@
 (defmethod serialize ::map
   [coll]
   (let [len (count coll)
-        body (concat-serialize (interleave (keys coll) (vals coll)))]
+        body (serialize-concat (interleave (keys coll) (vals coll)))]
     (cond
       (<= len 0xf)
         (with-header (bit-or 2r10000000 len) body)
