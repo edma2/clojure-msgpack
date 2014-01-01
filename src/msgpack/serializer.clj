@@ -5,7 +5,7 @@
 (defmulti serialize class)
 
 (defn- serialize-concat
-  "Recursively serialize a sequence of items, then concatenate the result."
+  "Recursively serialize a collection of items, then concatenate the result."
   [coll]
   (apply concat (map serialize coll)))
 
@@ -69,18 +69,18 @@
       (<= size 0xffffffff) (ubyte-array (concat [0xc6] (get-int-bytes size) data)))))
 
 (derive clojure.lang.Sequential ::array)
-(defmethod serialize ::array [coll]
-  (let [size (count coll)
-        data (serialize-concat coll)]
+(defmethod serialize ::array [seq]
+  (let [size (count seq)
+        data (serialize-concat seq)]
     (cond
       (<= size 0xf)        (ubyte-array (cons (bit-or 2r10010000 size) data))
       (<= size 0xffff)     (ubyte-array (concat [0xdc] (get-short-bytes size) data))
       (<= size 0xffffffff) (ubyte-array (concat [0xdd] (get-int-bytes size) data)))))
 
 (derive clojure.lang.IPersistentMap ::map)
-(defmethod serialize ::map [coll]
-  (let [size (count coll)
-        data (serialize-concat (interleave (keys coll) (vals coll)))]
+(defmethod serialize ::map [map]
+  (let [size (count map)
+        data (serialize-concat (interleave (keys map) (vals map)))]
     (cond
       (<= size 0xf)        (ubyte-array (cons (bit-or 2r10000000 size) data))
       (<= size 0xffff)     (ubyte-array (concat [0xde] (get-short-bytes size) data))
