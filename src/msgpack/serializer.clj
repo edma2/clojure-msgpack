@@ -3,10 +3,13 @@
 
 (defmulti serialize class)
 
-(defn- with-header
-  "Prepend a header byte to data."
-  [header data]
-  (cons (unsigned-byte header) data))
+(defn- msgpack-bytes
+  ([header data]
+   (let [header (if (number? header)
+                  [(unsigned-byte header)]
+                  (unsigned-bytes header))]
+   (byte-array (concat header (unsigned-bytes data)))))
+  ([data] (msgpack-bytes nil data)))
 
 (defn- serialize-concat
   "Recursively serialize a sequence of items, then concatenate the result."
@@ -14,12 +17,12 @@
   (apply concat (map serialize coll)))
 
 (defmethod serialize nil
-  [_] (unsigned-bytes [0xc0]))
+  [_] (msgpack-bytes [0xc0]))
 
 (defmethod serialize Boolean
   [bool]
-  (if bool (unsigned-bytes [0xc3])
-    (unsigned-bytes [0xc2])))
+  (if bool (msgpack-bytes [0xc3])
+    (msgpack-bytes [0xc2])))
 
 (derive Byte ::int)
 (derive Short ::int)
@@ -28,42 +31,42 @@
 (defmethod serialize ::int
   [x]
   (cond
-    (<= 0 x 127) (get-byte-bytes x)
-    (<= -32 x -1) (get-byte-bytes x)
-    (<= 0 x 0xff) (with-header 0xcc (get-byte-bytes x))
-    (<= 0 x 0xffff) (with-header 0xcd (get-short-bytes x))
-    (<= 0 x 0xffffffff) (with-header 0xce (get-int-bytes x))
-    (<= 0 x 0x7fffffffffffffff) (with-header 0xcf (get-long-bytes x))
-    (<= -0x80 x -1) (with-header 0xd0 (get-byte-bytes x))
-    (<= -0x8000 x -1) (with-header 0xd1 (get-short-bytes x))
-    (<= -0x80000000 x -1) (with-header 0xd2 (get-int-bytes x))
-    (<= -0x8000000000000000 x -1) (with-header 0xd3 (get-long-bytes x))))
+    (<= 0 x 127) (msgpack-bytes (get-byte-bytes x))
+    (<= -32 x -1) (msgpack-bytes (get-byte-bytes x))
+    (<= 0 x 0xff) (msgpack-bytes 0xcc (get-byte-bytes x))
+    (<= 0 x 0xffff) (msgpack-bytes 0xcd (get-short-bytes x))
+    (<= 0 x 0xffffffff) (msgpack-bytes 0xce (get-int-bytes x))
+    (<= 0 x 0x7fffffffffffffff) (msgpack-bytes 0xcf (get-long-bytes x))
+    (<= -0x80 x -1) (msgpack-bytes 0xd0 (get-byte-bytes x))
+    (<= -0x8000 x -1) (msgpack-bytes 0xd1 (get-short-bytes x))
+    (<= -0x80000000 x -1) (msgpack-bytes 0xd2 (get-int-bytes x))
+    (<= -0x8000000000000000 x -1) (msgpack-bytes 0xd3 (get-long-bytes x))))
 
 (defmethod serialize clojure.lang.BigInt
   [x]
   (if (<= 0x8000000000000000 x 0xffffffffffffffff)
     ; Extracts meaningful bits and drops sign.
-    (with-header 0xcf (get-long-bytes (.longValue x)))
+    (msgpack-bytes 0xcf (get-long-bytes (.longValue x)))
     (serialize (.longValue x))))
 
 (defmethod serialize Float [n]
-  (with-header 0xca (get-float-bytes n)))
+  (msgpack-bytes 0xca (get-float-bytes n)))
 
 (defmethod serialize Double [n]
-  (with-header 0xcb (get-double-bytes n)))
+  (msgpack-bytes 0xcb (get-double-bytes n)))
 
 (defmethod serialize String [s]
   (let [data (seq (.getBytes s))
         size (count data)]
     (cond
       (<= size 0x1f)
-        (with-header (bit-or 2r10100000 size) data)
+        (msgpack-bytes (bit-or 2r10100000 size) data)
       (<= size 0xff)
-        (with-header 0xd9 (concat (get-byte-bytes size) data))
+        (msgpack-bytes (cons 0xd9 (get-byte-bytes size)) data)
       (<= size 0xffff)
-        (with-header 0xda (concat (get-short-bytes size) data))
+        (msgpack-bytes (cons 0xda (get-short-bytes size)) data)
       (<= size 0xffffffff)
-        (with-header 0xdb (concat (get-int-bytes size) data)))))
+        (msgpack-bytes (cons 0xdb (get-int-bytes size)) data))))
 
 (derive (class (java.lang.reflect.Array/newInstance Byte 0)) ::byte-array)
 (derive (class (byte-array nil)) ::byte-array)
@@ -72,11 +75,11 @@
   (let [size (count data)]
     (cond
       (<= size 0xff)
-        (with-header 0xc4 (concat (get-byte-bytes size) data))
+        (msgpack-bytes (cons 0xc4 (get-byte-bytes size)) data)
       (<= size 0xffff)
-        (with-header 0xc5 (concat (get-short-bytes size) data))
+        (msgpack-bytes (cons 0xc5 (get-short-bytes size)) data)
       (<= size 0xffffffff)
-        (with-header 0xc6 (concat (get-int-bytes size) data)))))
+        (msgpack-bytes (cons 0xc6 (get-int-bytes size)) data))))
 
 (derive clojure.lang.Sequential ::array)
 (defmethod serialize ::array
@@ -85,11 +88,11 @@
         data (serialize-concat coll)]
     (cond
       (<= size 0xf)
-        (with-header (bit-or 2r10010000 size) data)
+        (msgpack-bytes (bit-or 2r10010000 size) data)
       (<= size 0xffff)
-        (with-header 0xdc (concat (get-short-bytes size) data))
+        (msgpack-bytes (cons 0xdc (get-short-bytes size)) data)
       (<= size 0xffffffff)
-        (with-header 0xdd (concat (get-int-bytes size) data)))))
+        (msgpack-bytes (cons 0xdd (get-int-bytes size)) data))))
 
 (derive clojure.lang.IPersistentMap ::map)
 (defmethod serialize ::map
@@ -98,8 +101,8 @@
         data (serialize-concat (interleave (keys coll) (vals coll)))]
     (cond
       (<= size 0xf)
-        (with-header (bit-or 2r10000000 size) data)
+        (msgpack-bytes (bit-or 2r10000000 size) data)
       (<= size 0xffff)
-        (with-header 0xde (concat (get-short-bytes size) data))
+        (msgpack-bytes (cons 0xde (get-short-bytes size)) data)
       (<= size 0xffffffff)
-        (with-header 0xdf (concat (get-int-bytes size) data)))))
+        (msgpack-bytes (cons 0xdf (get-int-bytes size)) data))))
