@@ -96,11 +96,10 @@
 (prefer-method serialize (:on-interface Extension) ::map)
 (defmethod serialize (:on-interface Extension)
   [ext]
+  {:pre [<= 0 (ext-type ext) 127]}
   (let [type (ext-type ext)
         data (ext-data ext)
         size (count data)]
-    ;; Negative types are reserved for future use.
-    (assert (<= 0 type 127))
     (cond
       (= size 1)           (ubyte-array (concat [0xd4 type] data))
       (= size 2)           (ubyte-array (concat [0xd5 type] data))
