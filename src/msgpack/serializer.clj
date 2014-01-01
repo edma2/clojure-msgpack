@@ -54,52 +54,52 @@
 
 (defmethod serialize String [s]
   (let [body (seq (.getBytes s))
-        len (count body)]
+        size (count body)]
     (cond
-      (<= len 0x1f)
-        (with-header (bit-or 2r10100000 len) body)
-      (<= len 0xff)
-        (with-header 0xd9 (concat (get-byte-bytes len) body))
-      (<= len 0xffff)
-        (with-header 0xda (concat (get-short-bytes len) body))
-      (<= len 0xffffffff)
-        (with-header 0xdb (concat (get-int-bytes len) body)))))
+      (<= size 0x1f)
+        (with-header (bit-or 2r10100000 size) body)
+      (<= size 0xff)
+        (with-header 0xd9 (concat (get-byte-bytes size) body))
+      (<= size 0xffff)
+        (with-header 0xda (concat (get-short-bytes size) body))
+      (<= size 0xffffffff)
+        (with-header 0xdb (concat (get-int-bytes size) body)))))
 
 (derive (class (java.lang.reflect.Array/newInstance Byte 0)) ::byte-array)
 (derive (class (byte-array nil)) ::byte-array)
 (defmethod serialize ::byte-array
   [body]
-  (let [len (count body)]
+  (let [size (count body)]
     (cond
-      (<= len 0xff)
-        (with-header 0xc4 (concat (get-byte-bytes len) body))
-      (<= len 0xffff)
-        (with-header 0xc5 (concat (get-short-bytes len) body))
-      (<= len 0xffffffff)
-        (with-header 0xc6 (concat (get-int-bytes len) body)))))
+      (<= size 0xff)
+        (with-header 0xc4 (concat (get-byte-bytes size) body))
+      (<= size 0xffff)
+        (with-header 0xc5 (concat (get-short-bytes size) body))
+      (<= size 0xffffffff)
+        (with-header 0xc6 (concat (get-int-bytes size) body)))))
 
 (derive clojure.lang.Sequential ::array)
 (defmethod serialize ::array
   [coll]
-  (let [len (count coll)
+  (let [size (count coll)
         body (serialize-concat coll)]
     (cond
-      (<= len 0xf)
-        (with-header (bit-or 2r10010000 len) body)
-      (<= len 0xffff)
-        (with-header 0xdc (concat (get-short-bytes len) body))
-      (<= len 0xffffffff)
-        (with-header 0xdd (concat (get-int-bytes len) body)))))
+      (<= size 0xf)
+        (with-header (bit-or 2r10010000 size) body)
+      (<= size 0xffff)
+        (with-header 0xdc (concat (get-short-bytes size) body))
+      (<= size 0xffffffff)
+        (with-header 0xdd (concat (get-int-bytes size) body)))))
 
 (derive clojure.lang.IPersistentMap ::map)
 (defmethod serialize ::map
   [coll]
-  (let [len (count coll)
+  (let [size (count coll)
         body (serialize-concat (interleave (keys coll) (vals coll)))]
     (cond
-      (<= len 0xf)
-        (with-header (bit-or 2r10000000 len) body)
-      (<= len 0xffff)
-        (with-header 0xde (concat (get-short-bytes len) body))
-      (<= len 0xffffffff)
-        (with-header 0xdf (concat (get-int-bytes len) body)))))
+      (<= size 0xf)
+        (with-header (bit-or 2r10000000 size) body)
+      (<= size 0xffff)
+        (with-header 0xde (concat (get-short-bytes size) body))
+      (<= size 0xffffffff)
+        (with-header 0xdf (concat (get-int-bytes size) body)))))
