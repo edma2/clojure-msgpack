@@ -14,7 +14,7 @@
   (let [output-stream (new ByteArrayOutputStream)
         data-output (new DataOutputStream output-stream)]
     (write data-output x)
-    (seq (.toByteArray output-stream))))
+    (.toByteArray output-stream)))
 
 (defn get-byte-bytes [x] (get-bytes #(.writeByte %1 %2) x))
 (defn get-short-bytes [x] (get-bytes #(.writeShort %1 %2) x))
