@@ -9,11 +9,9 @@
   [coll]
   (apply concat (map serialize coll)))
 
-(defmethod serialize nil
-  [_] (ubyte-array [0xc0]))
+(defmethod serialize nil [_] (ubyte-array [0xc0]))
 
-(defmethod serialize Boolean
-  [b]
+(defmethod serialize Boolean [b]
   (if b (ubyte-array [0xc3])
     (ubyte-array [0xc2])))
 
@@ -21,8 +19,7 @@
 (derive Short ::int)
 (derive Integer ::int)
 (derive Long ::int)
-(defmethod serialize ::int
-  [n]
+(defmethod serialize ::int [n]
   (cond
     (<= 0 n 127)                  (ubyte-array (get-byte-bytes n))
     (<= -32 n -1)                 (ubyte-array (get-byte-bytes n))
@@ -35,8 +32,7 @@
     (<= -0x80000000 n -1)         (ubyte-array (cons 0xd2 (get-int-bytes n)))
     (<= -0x8000000000000000 n -1) (ubyte-array (cons 0xd3 (get-long-bytes n)))))
 
-(defmethod serialize clojure.lang.BigInt
-  [n]
+(defmethod serialize clojure.lang.BigInt [n]
   (if (<= 0x8000000000000000 n 0xffffffffffffffff)
     ;; Extracts meaningful bits and drops sign.
     (ubyte-array (cons 0xcf (get-long-bytes (.longValue n))))
@@ -65,8 +61,7 @@
 
 (derive (class (java.lang.reflect.Array/newInstance Byte 0)) ::byte-array)
 (derive (class (byte-array nil)) ::byte-array)
-(defmethod serialize ::byte-array
-  [data]
+(defmethod serialize ::byte-array [data]
   (let [size (count data)]
     (cond
       (<= size 0xff)       (ubyte-array (concat [0xc4] (get-byte-bytes size) data))
@@ -74,8 +69,7 @@
       (<= size 0xffffffff) (ubyte-array (concat [0xc6] (get-int-bytes size) data)))))
 
 (derive clojure.lang.Sequential ::array)
-(defmethod serialize ::array
-  [coll]
+(defmethod serialize ::array [coll]
   (let [size (count coll)
         data (serialize-concat coll)]
     (cond
@@ -84,8 +78,7 @@
       (<= size 0xffffffff) (ubyte-array (concat [0xdd] (get-int-bytes size) data)))))
 
 (derive clojure.lang.IPersistentMap ::map)
-(defmethod serialize ::map
-  [coll]
+(defmethod serialize ::map [coll]
   (let [size (count coll)
         data (serialize-concat (interleave (keys coll) (vals coll)))]
     (cond
@@ -94,8 +87,7 @@
       (<= size 0xffffffff) (ubyte-array (concat [0xdf] (get-int-bytes size) data)))))
 
 (prefer-method serialize (:on-interface Extension) ::map)
-(defmethod serialize (:on-interface Extension)
-  [ext]
+(defmethod serialize (:on-interface Extension) [ext]
   {:pre [<= 0 (ext-type ext) 127]}
   (let [type (ext-type ext)
         data (ext-data ext)
