@@ -61,6 +61,8 @@
       (<= len 0xffffffff)
         (with-header 0xdb (concat (get-int-bytes len) sbytes)))))
 
+; Serialize both primitive byte arrays and boxed byte arrays as MessagePack
+; byte arrays.
 (derive (class (java.lang.reflect.Array/newInstance Byte 0)) ::byte-array)
 (derive (class (byte-array nil)) ::byte-array)
 
