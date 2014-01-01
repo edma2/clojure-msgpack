@@ -82,11 +82,16 @@
   [bytes]
   (serialize-bytes bytes))
 
-; TODO: More general dispatch type?
+; Recursively serialize a sequence of items, then concatenate the result.
+(defn- serialize-all
+  [seq]
+  (apply concat (map serialize seq)))
+
+; TODO: what kind of dispatch type?
 (defmethod serialize clojure.lang.Sequential
   [seq]
   (let [len (count seq)
-        body (apply concat (map serialize seq))]
+        body (serialize-all seq)]
     (cond
       (<= len 0xf)
         (with-header (bit-or 2r10010000 len) body)
@@ -94,3 +99,15 @@
         (with-header 0xdc (concat (get-short-bytes len) body))
       (<= len 0xffffffff)
         (with-header 0xdd (concat (get-int-bytes len) body)))))
+
+(defmethod serialize clojure.lang.IPersistentMap
+  [map]
+  (let [len (count map)
+        body (serialize-all (interleave (keys map) (vals map)))]
+    (cond
+      (<= len 0xf)
+        (with-header (bit-or 2r10000000 len) body)
+      (<= len 0xffff)
+        (with-header 0xde (concat (get-short-bytes len) body))
+      (<= len 0xffffffff)
+        (with-header 0xdf (concat (get-int-bytes len) body)))))
