@@ -15,7 +15,7 @@ clojure-msgpack is a library for
 
 (defrecord Person [name]
   Extended
-  (extension [this] [1 (.getBytes (this name))]))
+  (extension [this] [1 (.getBytes (:name this))]))
 
 (let [bob (Person. "Bob")
       bytes (msgpack/serialize bob)]
