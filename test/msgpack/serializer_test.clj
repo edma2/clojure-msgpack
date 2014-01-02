@@ -1,7 +1,7 @@
 (ns msgpack.serializer-test
   (:require [clojure.test :refer :all]
             [msgpack.utils :refer :all]
-            [msgpack.proto :refer :all]
+            [msgpack.ext :refer :all]
             [msgpack.serializer :refer :all]))
 
 (defmacro serializes-as [thing bytes]
@@ -144,7 +144,7 @@
                            (interleave (range 0 16) (repeat 16 5))))))
 
 (defn- reify-ext [type data]
-  (reify Extension (ext-type [_] type) (ext-data [_] data)))
+  (reify Extended (extension [_] [type, data])))
 
 (deftest ext-test
   (testing "fixext 1"

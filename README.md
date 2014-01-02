@@ -8,15 +8,14 @@ clojure-msgpack is a library for
 
 ```clojure
 (require '[msgpack.core :as msgpack])
-(require '[msgpack.proto :refer :all])
+(require '[msgpack.ext :refer :all])
 
 (msgpack/serialize {:compact true :schema 0})
 ; #<byte[] [B@5984b649>
 
 (defrecord Person [name]
-  Extension
-  (ext-type [_] 1)
-  (ext-data [this] (.getBytes (:name this))))
+  Extended
+  (extension [this] [1 (.getBytes (this name))]))
 
 (let [bob (Person. "Bob")
       bytes (msgpack/serialize bob)]
