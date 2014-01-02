@@ -1,13 +1,14 @@
-(ns msgpack.serializer-test
+(ns msgpack.core-test
   (:require [clojure.test :refer :all]
             [msgpack.utils :refer :all]
             [msgpack.ext :refer :all]
-            [msgpack.serializer :refer :all]))
+            [msgpack.core :refer :all]))
 
 (defmacro serializes-as [thing bytes]
   `(let [thing# ~thing
          bytes# ~bytes]
-     (is (= (ubytes bytes#) (seq (serialize thing#))))))
+     (is (= (ubytes bytes#) (seq (serialize thing#))))
+     (is (= thing# (deserialize bytes#)))))
 
 (deftest nil-test
   (testing "nil"
