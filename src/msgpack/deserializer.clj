@@ -12,7 +12,6 @@
       (<= 0x90 first-byte 0x9f) nil
       (<= 0xa0 first-byte 0xbf) nil
       (= first-byte 0xc0) nil
-      (= first-byte 0xc1) nil
       (= first-byte 0xc2) false
       (= first-byte 0xc3) true
       (= first-byte 0xc4) nil
