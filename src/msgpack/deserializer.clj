@@ -4,7 +4,7 @@
 
 (defn- as-unsigned [byte] (bit-and 0xff byte))
 
-(defn- deserialize-positive-fixint [bytes]
+(defn- deserialize-uint7 [bytes]
   (bit-and 0x7f (first bytes)))
 
 (defn- ??? [] (throw (UnsupportedOperationException.)))
@@ -12,7 +12,7 @@
 (defn deserialize [bytes]
   (let [first-byte (-> bytes first as-unsigned)]
     (cond
-      (<= 0x00 first-byte 0x7f) (deserialize-positive-fixint bytes)
+      (<= 0x00 first-byte 0x7f) (deserialize-uint7 bytes)
       (<= 0x80 first-byte 0x8f) (???)
       (<= 0x90 first-byte 0x9f) (???)
       (<= 0xa0 first-byte 0xbf) (???)
