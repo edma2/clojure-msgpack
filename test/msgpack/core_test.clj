@@ -3,14 +3,11 @@
             [msgpack.util :refer :all]
             [msgpack.core :refer :all]))
 
-(defn- ubytes [seq] (map B seq))
-(defn- ubyte-array [seq] (byte-array (ubytes seq)))
-
 ;; TODO: unpack
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# ~bytes]
-     (is (= (ubytes bytes#) (seq (pack thing#))))))
+     (is (= (map B bytes#) (seq (pack thing#))))))
 
 (deftest nil-test
   (testing "nil"
@@ -100,14 +97,14 @@
 (deftest bin-test
   (testing "bin 8"
     (packable (byte-array nil) [0xc4 0x00])
-    (packable (ubyte-array [0x80]) [0xc4 0x01 0x80])
-    (packable (ubyte-array (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
-    (packable (ubyte-array (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
+    (packable (byte-array [(B 0x80)]) [0xc4 0x01 0x80])
+    (packable (byte-array (repeat 32 (B 0x80))) (concat [0xc4 0x20] (repeat 32 0x80)))
+    (packable (byte-array (repeat 255 (B 0x80))) (concat [0xc4 0xff] (repeat 255 0x80))))
   (testing "bin 16"
-    (packable (ubyte-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+    (packable (byte-array (repeat 256 (B 0x80))) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
   (testing "bin 32"
-    (packable (ubyte-array (repeat 65536 0x80))
-                   (concat [0xc6 0x00 0x01 0x00 0x00] (repeat  65536 0x80)))))
+    (packable (byte-array (repeat 65536 (B 0x80)))
+              (concat [0xc6 0x00 0x01 0x00 0x00] (repeat  65536 0x80)))))
 
 ;(declare reify-ext)
 
@@ -131,10 +128,10 @@
 (deftest map-test
   (testing "fixmap"
     (packable {} [0x80])
-    (packable {1 true 2 "abc" 3 (ubyte-array [0x80])}
+    (packable {1 true 2 "abc" 3 (byte-array [(B 0x80)])}
                    [0x83 0x01 0xc3 0x02 0xa3 0x61 0x62 0x63 0x03 0xc4 0x01 0x80])
     (packable {"abc" 5} [0x81 0xa3 0x61 0x62 0x63 0x05])
-    (packable {(ubyte-array [0x80]) 0xffff}
+    (packable {(byte-array [(B 0x80)]) 0xffff}
                    [0x81 0xc4 0x01 0x80 0xcd 0xff 0xff])
     (packable {true nil} [0x81 0xc3 0xc0])
     (packable {:compact true :schema 0}
