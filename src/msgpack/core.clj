@@ -16,8 +16,8 @@
 
   (defstruct Employee [name])
 
-  (defext Employee 1
-    [e] (.getBytes (:name e)))
+  (defext Employee 1 [e]
+    (.getBytes (:name e)))
 
   expands into:
 
