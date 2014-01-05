@@ -20,6 +20,9 @@ clojure-msgpack is a library for
       bytes (pack bob)]
   (map #(format "0x%x" %) bytes))
 ; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
+
+; Or encode an extension directly
+(pack (Extension. 2 (.getBytes "test")))
 ```
 
 ## License

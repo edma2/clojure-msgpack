@@ -3,7 +3,7 @@
   (:import java.io.ByteArrayOutputStream
            java.io.DataOutputStream))
 
-(declare pack-int pack-bytes pack-ext pack-all)
+(declare pack-int pack-bytes pack-all)
 
 (defprotocol Packable
   "An object that can be encoded in a MessagePack format."
@@ -24,7 +24,7 @@
 
   (extend-protocol Packable
     Employee
-    (pack [e] (pack-ext (Extension. 1 (.getBytes (:name e))))))
+    (pack [e] (pack (Extension. 1 (.getBytes (:name e))))))
 
   and this will work:
   (pack (Employee. employee-name))"
@@ -33,7 +33,7 @@
           "[-1, -128]: reserved for future pre-defined extensions.")
   `(extend-protocol Packable
      ~class
-     (pack ~args (pack-ext (Extension. ~type ~body)))))
+     (pack ~args (pack (Extension. ~type ~body)))))
 
 (extend-protocol Packable
   nil
@@ -90,7 +90,22 @@
       (cond
         (<= len 0xf)        (byte-array (cons (B (bit-or 2r10000000 len)) bytes))
         (<= len 0xffff)     (byte-array (concat [(B 0xde)] (short->bytes len) bytes))
-        (<= len 0xffffffff) (byte-array (concat [(B 0xdf)] (int->bytes len) bytes))))))
+        (<= len 0xffffffff) (byte-array (concat [(B 0xdf)] (int->bytes len) bytes)))))
+
+  Extension
+  (pack [ext]
+    (let [type (:type ext)
+          bytes (:data ext)
+          len (count bytes)]
+      (cond
+        (= len 1)           (byte-array (concat [(B 0xd4) (B type)] bytes))
+        (= len 2)           (byte-array (concat [(B 0xd5) (B type)] bytes))
+        (= len 4)           (byte-array (concat [(B 0xd6) (B type)] bytes))
+        (= len 8)           (byte-array (concat [(B 0xd7) (B type)] bytes))
+        (= len 16)          (byte-array (concat [(B 0xd8) (B type)] bytes))
+        (<= len 0xff)       (byte-array (concat (cons (B 0xc7) (byte->bytes len)) (cons (B type) bytes)))
+        (<= len 0xffff)     (byte-array (concat (cons (B 0xc8) (short->bytes len)) (cons (B type) bytes)))
+        (<= len 0xffffffff) (byte-array (concat (cons (B 0xc9) (int->bytes len)) (cons (B type) bytes)))))))
 
 ;; Clojure bug when extending primitive types inside extend-protocol.
 ;; https://groups.google.com/forum/#!msg/clojure/PwmzA12By-I/nYBdNu2IeyMJ
@@ -127,17 +142,3 @@
       (<= len 0xff)       (byte-array (concat [(B 0xc4)] (byte->bytes len) bytes))
       (<= len 0xffff)     (byte-array (concat [(B 0xc5)] (short->bytes len) bytes))
       (<= len 0xffffffff) (byte-array (concat [(B 0xc6)] (int->bytes len) bytes)))))
-
-(defn- pack-ext [ext]
-  (let [type (:type ext)
-        bytes (:data ext)
-        len (count bytes)]
-    (cond
-      (= len 1)           (byte-array (concat [(B 0xd4) (B type)] bytes))
-      (= len 2)           (byte-array (concat [(B 0xd5) (B type)] bytes))
-      (= len 4)           (byte-array (concat [(B 0xd6) (B type)] bytes))
-      (= len 8)           (byte-array (concat [(B 0xd7) (B type)] bytes))
-      (= len 16)          (byte-array (concat [(B 0xd8) (B type)] bytes))
-      (<= len 0xff)       (byte-array (concat (cons (B 0xc7) (byte->bytes len)) (cons (B type) bytes)))
-      (<= len 0xffff)     (byte-array (concat (cons (B 0xc8) (short->bytes len)) (cons (B type) bytes)))
-      (<= len 0xffffffff) (byte-array (concat (cons (B 0xc9) (int->bytes len)) (cons (B type) bytes))))))
