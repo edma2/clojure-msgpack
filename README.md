@@ -7,18 +7,17 @@ clojure-msgpack is a library for
 ## Usage
 
 ```clojure
-(require '[msgpack.core :as msgpack])
-(require '[msgpack.ext :refer :all])
+(require '[msgpack.core :refer :all])
 
-(msgpack/serialize {:compact true :schema 0})
+(pack {:compact true :schema 0})
 ; #<byte[] [B@5984b649>
 
-(defrecord Person [name]
-  Extended
-  (extension [this] [1 (.getBytes (:name this))]))
+; Declare records and types as Extended types.
+(defext Employee 1
+  [e] (.getBytes (:name e)))
 
-(let [bob (Person. "Bob")
-      bytes (msgpack/serialize bob)]
+(let [bob (Employee. "Bob")
+      bytes (pack bob)]
   (map #(format "0x%x" %) bytes))
 ; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
 ```

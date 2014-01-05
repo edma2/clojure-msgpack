@@ -3,11 +3,37 @@
   (:import java.io.ByteArrayOutputStream
            java.io.DataOutputStream))
 
-(declare pack-int pack-bytes pack-all)
+(declare pack-int pack-bytes pack-ext pack-all)
 
 (defprotocol Packable
   "An object that can be encoded in a MessagePack format."
   (pack [this]))
+
+(defrecord Extension [type data])
+
+(defmacro defext
+  "Treat an existing class as a MessagePack extended type.
+  As a side-effect, the class will extend the Packable protocol.
+
+  (defstruct Employee [name])
+
+  (defext Employee 1
+    [e] (.getBytes (:name e)))
+
+  expands into:
+
+  (extend-protocol Packable
+    Employee
+    (pack [e] (pack-ext (Extension. 1 (.getBytes (:name e))))))
+
+  and this will work:
+  (pack (Employee. employee-name))"
+  [class type args body]
+  (assert (<= 0 type 127)
+          "[-1, -128]: reserved for future pre-defined extensions.")
+  `(extend-protocol Packable
+     ~class
+     (pack ~args (pack-ext (Extension. ~type ~body)))))
 
 (extend-protocol Packable
   nil
@@ -101,3 +127,17 @@
       (<= len 0xff)       (byte-array (concat [(B 0xc4)] (byte->bytes len) bytes))
       (<= len 0xffff)     (byte-array (concat [(B 0xc5)] (short->bytes len) bytes))
       (<= len 0xffffffff) (byte-array (concat [(B 0xc6)] (int->bytes len) bytes)))))
+
+(defn- pack-ext [ext]
+  (let [type (:type ext)
+        bytes (:data ext)
+        len (count bytes)]
+    (cond
+      (= len 1)           (byte-array (concat [(B 0xd4) (B type)] bytes))
+      (= len 2)           (byte-array (concat [(B 0xd5) (B type)] bytes))
+      (= len 4)           (byte-array (concat [(B 0xd6) (B type)] bytes))
+      (= len 8)           (byte-array (concat [(B 0xd7) (B type)] bytes))
+      (= len 16)          (byte-array (concat [(B 0xd8) (B type)] bytes))
+      (<= len 0xff)       (byte-array (concat (cons (B 0xc7) (byte->bytes len)) (cons (B type) bytes)))
+      (<= len 0xffff)     (byte-array (concat (cons (B 0xc8) (short->bytes len)) (cons (B type) bytes)))
+      (<= len 0xffffffff) (byte-array (concat (cons (B 0xc9) (int->bytes len)) (cons (B type) bytes))))))
