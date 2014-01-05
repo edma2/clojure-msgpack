@@ -7,7 +7,7 @@
   "An object that can be encoded in a MessagePack format."
   (pack [this]))
 
-; The raw extension type which consists of a (type, data) tuple
+;; The raw extension type which consists of a (type, data) tuple
 (defrecord Extension [type data])
 
 (defmacro defext

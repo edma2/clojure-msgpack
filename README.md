@@ -13,8 +13,8 @@ clojure-msgpack is a library for
 ; #<byte[] [B@5984b649>
 
 ; Declare records and types as Extended types.
-(defext Employee 1
-  [e] (.getBytes (:name e)))
+(defext Employee 1 [e]
+  (.getBytes (:name e)))
 
 (let [bob (Employee. "Bob")
       bytes (pack bob)]
