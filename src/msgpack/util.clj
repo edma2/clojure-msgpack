@@ -2,12 +2,14 @@
   (:import java.io.ByteArrayOutputStream
            java.io.DataOutputStream))
 
-(defn B
+(defn ubyte
   "Treat n as if it were an unsigned byte literal. If n is greater
   than the maximum value of a signed byte (127), convert it to a
   negative byte value with the same pattern of bits."
   [n]
   (byte (if (> n 0x7f) (- n 0x100) n)))
+
+(defn ubytes [coll] (byte-array (map ubyte coll)))
 
 (defn- ->bytes
   "Convert a Java primitive to its byte representation."
