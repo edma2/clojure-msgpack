@@ -22,7 +22,7 @@ clojure-msgpack is a library for
 ; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
 
 ; Or encode an extension directly
-(pack (Extension. 2 (.getBytes "test")))
+(pack (Extension. 1 (.getBytes "Bob")))
 ```
 
 ## License
