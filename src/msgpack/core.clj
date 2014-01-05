@@ -1,7 +1,5 @@
 (ns msgpack.core
-  (:require [msgpack.util :refer :all])
-  (:import java.io.ByteArrayOutputStream
-           java.io.DataOutputStream))
+  (:require [msgpack.util :refer :all]))
 
 (declare pack-int pack-bytes pack-all)
 
