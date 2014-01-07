@@ -34,6 +34,9 @@
      ~class
      (pack ~args (pack (Extension. ~type ~body)))))
 
+(defmacro cond-let [bindings & clauses]
+  `(let ~bindings (cond ~@clauses)))
+
 (extend-protocol Packable
   nil
   (pack [_] (ubytes [0xc0]))
@@ -65,46 +68,42 @@
   clojure.lang.Symbol (pack [s] (pack (name s)))
   String
   (pack [s]
-    (let [bytes (.getBytes s)
-          len (count bytes)]
-      (cond
-        (<= len 0x1f)       (ubytes (cons (bit-or 2r10100000 len) bytes))
-        (<= len 0xff)       (ubytes (concat [0xd9] (byte->bytes len) bytes))
-        (<= len 0xffff)     (ubytes (concat [0xda] (short->bytes len) bytes))
-        (<= len 0xffffffff) (ubytes (concat [0xdb] (int->bytes len) bytes)))))
+    (cond-let [bytes (.getBytes s)
+               len (count bytes)]
+      (<= len 0x1f)       (ubytes (cons (bit-or 2r10100000 len) bytes))
+      (<= len 0xff)       (ubytes (concat [0xd9] (byte->bytes len) bytes))
+      (<= len 0xffff)     (ubytes (concat [0xda] (short->bytes len) bytes))
+      (<= len 0xffffffff) (ubytes (concat [0xdb] (int->bytes len) bytes))))
 
   clojure.lang.Sequential
   (pack [seq]
-    (let [len (count seq)
-          bytes (pack-all seq)]
-      (cond
-        (<= len 0xf)        (ubytes (cons (bit-or 2r10010000 len) bytes))
-        (<= len 0xffff)     (ubytes (concat [0xdc] (short->bytes len) bytes))
-        (<= len 0xffffffff) (ubytes (concat [0xdd] (int->bytes len) bytes)))))
+    (cond-let [len (count seq)
+               bytes (pack-all seq)]
+      (<= len 0xf)        (ubytes (cons (bit-or 2r10010000 len) bytes))
+      (<= len 0xffff)     (ubytes (concat [0xdc] (short->bytes len) bytes))
+      (<= len 0xffffffff) (ubytes (concat [0xdd] (int->bytes len) bytes))))
 
   clojure.lang.IPersistentMap
   (pack [map]
-    (let [len (count map)
-          bytes (pack-all (interleave (keys map) (vals map)))]
-      (cond
-        (<= len 0xf)        (ubytes (cons (bit-or 2r10000000 len) bytes))
-        (<= len 0xffff)     (ubytes (concat [0xde] (short->bytes len) bytes))
-        (<= len 0xffffffff) (ubytes (concat [0xdf] (int->bytes len) bytes)))))
+    (cond-let [len (count map)
+               bytes (pack-all (interleave (keys map) (vals map)))]
+      (<= len 0xf)        (ubytes (cons (bit-or 2r10000000 len) bytes))
+      (<= len 0xffff)     (ubytes (concat [0xde] (short->bytes len) bytes))
+      (<= len 0xffffffff) (ubytes (concat [0xdf] (int->bytes len) bytes))))
 
   Extension
   (pack [ext]
-    (let [type (:type ext)
-          bytes (:data ext)
-          len (count bytes)]
-      (cond
-        (= len 1)           (ubytes (concat [0xd4 type] bytes))
-        (= len 2)           (ubytes (concat [0xd5 type] bytes))
-        (= len 4)           (ubytes (concat [0xd6 type] bytes))
-        (= len 8)           (ubytes (concat [0xd7 type] bytes))
-        (= len 16)          (ubytes (concat [0xd8 type] bytes))
-        (<= len 0xff)       (ubytes (concat (cons 0xc7 (byte->bytes len)) (cons type bytes)))
-        (<= len 0xffff)     (ubytes (concat (cons 0xc8 (short->bytes len)) (cons type bytes)))
-        (<= len 0xffffffff) (ubytes (concat (cons 0xc9 (int->bytes len)) (cons type bytes)))))))
+    (cond-let [type (:type ext)
+               bytes (:data ext)
+               len (count bytes)]
+      (= len 1)           (ubytes (concat [0xd4 type] bytes))
+      (= len 2)           (ubytes (concat [0xd5 type] bytes))
+      (= len 4)           (ubytes (concat [0xd6 type] bytes))
+      (= len 8)           (ubytes (concat [0xd7 type] bytes))
+      (= len 16)          (ubytes (concat [0xd8 type] bytes))
+      (<= len 0xff)       (ubytes (concat (cons 0xc7 (byte->bytes len)) (cons type bytes)))
+      (<= len 0xffff)     (ubytes (concat (cons 0xc8 (short->bytes len)) (cons type bytes)))
+      (<= len 0xffffffff) (ubytes (concat (cons 0xc9 (int->bytes len)) (cons type bytes))))))
 
 ;; Clojure bug when extending primitive types inside extend-protocol.
 ;; https://groups.google.com/forum/#!msg/clojure/PwmzA12By-I/nYBdNu2IeyMJ
@@ -136,8 +135,7 @@
     (<= -0x8000000000000000 n -1) (ubytes (cons 0xd3 (long->bytes n)))))
 
 (defn- pack-bytes [bytes]
-  (let [len (count bytes)]
-    (cond
-      (<= len 0xff)       (ubytes (concat [0xc4] (byte->bytes len) bytes))
-      (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
-      (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes)))))
+  (cond-let [len (count bytes)]
+    (<= len 0xff)       (ubytes (concat [0xc4] (byte->bytes len) bytes))
+    (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
+    (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
