@@ -140,33 +140,42 @@
     (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
     (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
 
-(defn- unpack-stream [stream]
-  (cond-let [b (next-byte stream)
-             ub (unsigned b)]
-    (= ub 0xc0) nil
-    (= ub 0xc2) false
-    (= ub 0xc3) true
-    (<= -32 b 127) b
-    (= ub 0xcc) (unsigned (next-byte stream))
-    (= ub 0xcd) (unsigned (next-short stream))
-    (= ub 0xce) (unsigned (next-int stream))
-    (= ub 0xcf) (unsigned (next-long stream))
-    (= ub 0xd0) (next-byte stream)
-    (= ub 0xd1) (next-short stream)
-    (= ub 0xd2) (next-int stream)
-    (= ub 0xd3) (next-long stream)
-    (= ub 0xca) (next-float stream)
-    (= ub 0xcb) (next-double stream)
+(defn- unpack-stream
+  ([n stream]
+    (for [_ (range n)]
+      (unpack-stream stream)))
+  ([stream]
+   (cond-let [b (next-byte stream)
+              ub (unsigned b)]
+     (= ub 0xc0) nil
+     (= ub 0xc2) false
+     (= ub 0xc3) true
+     (<= -32 b 127) b
+     (= ub 0xcc) (unsigned (next-byte stream))
+     (= ub 0xcd) (unsigned (next-short stream))
+     (= ub 0xce) (unsigned (next-int stream))
+     (= ub 0xcf) (unsigned (next-long stream))
+     (= ub 0xd0) (next-byte stream)
+     (= ub 0xd1) (next-short stream)
+     (= ub 0xd2) (next-int stream)
+     (= ub 0xd3) (next-long stream)
+     (= ub 0xca) (next-float stream)
+     (= ub 0xcb) (next-double stream)
 
-    (not= 0 (bit-and 2r10100000 b))
-      (next-string (bit-and 2r11111 b) stream)
-    (= ub 0xd9) (next-string (unsigned (next-byte stream)) stream)
-    (= ub 0xda) (next-string (unsigned (next-short stream)) stream)
-    (= ub 0xdb) (next-string (unsigned (next-int stream)) stream)
+     (= (bit-and 2r11100000 b) 2r10100000)
+       (next-string (bit-and 2r11111 b) stream)
+     (= ub 0xd9) (next-string (unsigned (next-byte stream)) stream)
+     (= ub 0xda) (next-string (unsigned (next-short stream)) stream)
+     (= ub 0xdb) (next-string (unsigned (next-int stream)) stream)
 
-    (= ub 0xc4) (next-bytes (unsigned (next-byte stream)) stream)
-    (= ub 0xc5) (next-bytes (unsigned (next-short stream)) stream)
-    (= ub 0xc6) (next-bytes (unsigned (next-int stream)) stream)))
+     (= ub 0xc4) (next-bytes (unsigned (next-byte stream)) stream)
+     (= ub 0xc5) (next-bytes (unsigned (next-short stream)) stream)
+     (= ub 0xc6) (next-bytes (unsigned (next-int stream)) stream)
+
+     (= (bit-and 2r11110000 b) 2r10010000)
+       (unpack-stream (bit-and 2r1111 b) stream)
+     (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream)
+     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream))))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
