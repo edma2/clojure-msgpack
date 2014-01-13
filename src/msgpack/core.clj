@@ -150,7 +150,11 @@
     (= ub 0xcc) (unsigned (next-byte stream))
     (= ub 0xcd) (unsigned (next-short stream))
     (= ub 0xce) (unsigned (next-int stream))
-    (= ub 0xcf) (unsigned (next-long stream))))
+    (= ub 0xcf) (unsigned (next-long stream))
+    (= ub 0xd0) (next-byte stream)
+    (= ub 0xd1) (next-short stream)
+    (= ub 0xd2) (next-int stream)
+    (= ub 0xd3) (next-long stream)))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
