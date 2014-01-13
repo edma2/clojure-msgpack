@@ -46,9 +46,7 @@
 (defn double->bytes [x] (->bytes #(.writeDouble %1 %2) x))
 
 (defn byte-stream [bytes]
-  (let [input-stream (ByteArrayInputStream. (byte-array bytes))
-        data-input (DataInputStream. input-stream)]
-    data-input))
+  (DataInputStream. (ByteArrayInputStream. (byte-array bytes))))
 
 ;; DataInputStream
 (defn next-byte [stream] (.readByte stream))
