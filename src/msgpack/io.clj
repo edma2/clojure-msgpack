@@ -57,3 +57,8 @@
 (defn next-long [stream] (.readLong stream))
 (defn next-float [stream] (.readFloat stream))
 (defn next-double [stream] (.readDouble stream))
+(defn next-bytes [n stream]
+  (assert (.read stream (byte-array n) n))
+  bytes)
+
+(defn next-string [n stream] (.String (next-bytes n stream)))

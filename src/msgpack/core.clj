@@ -156,7 +156,12 @@
     (= ub 0xd2) (next-int stream)
     (= ub 0xd3) (next-long stream)
     (= ub 0xca) (next-float stream)
-    (= ub 0xcb) (next-double stream)))
+    (= ub 0xcb) (next-double stream)
+    (not= 0 (bit-and 2r10100000 b))
+      (next-string (bit-and 2r11111 b) stream)
+    (= ub 0xd9) (next-string (unsigned (next-byte stream)) stream)
+    (= ub 0xda) (next-string (unsigned (next-short stream)) stream)
+    (= ub 0xdb) (next-string (unsigned (next-int stream)) stream)))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
