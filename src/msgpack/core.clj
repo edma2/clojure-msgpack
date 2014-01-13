@@ -140,7 +140,7 @@
     (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
     (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
 
-(defn- unpack-from-stream [stream]
+(defn- unpack-stream [stream]
   (cond-let [b (next-byte stream)
              ub (unsigned b)]
     (= ub 0xc0) nil
@@ -153,4 +153,4 @@
     (= ub 0xcf) (unsigned (next-long stream))))
 
 (defn unpack [bytes]
-  (unpack-from-stream (byte-stream bytes)))
+  (unpack-stream (byte-stream bytes)))
