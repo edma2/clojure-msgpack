@@ -3,7 +3,6 @@
             [msgpack.io :refer :all]
             [msgpack.core :refer :all]))
 
-;; TODO: unpack
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# (ubytes ~bytes)]
