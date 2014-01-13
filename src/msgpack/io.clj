@@ -1,4 +1,4 @@
-(ns msgpack.util ;; rename to msgpack.io?
+(ns msgpack.io
   (:import java.io.ByteArrayOutputStream
            java.io.DataOutputStream
            java.io.ByteArrayInputStream

@@ -1,6 +1,6 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
-            [msgpack.util :refer :all]
+            [msgpack.io :refer :all]
             [msgpack.core :refer :all]))
 
 ;; TODO: unpack

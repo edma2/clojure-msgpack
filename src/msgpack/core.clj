@@ -1,5 +1,5 @@
 (ns msgpack.core
-  (:require [msgpack.util :refer :all]))
+  (:require [msgpack.io :refer :all]))
 
 (declare pack-int pack-bytes pack-all)
 
