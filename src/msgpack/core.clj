@@ -154,7 +154,9 @@
     (= ub 0xd0) (next-byte stream)
     (= ub 0xd1) (next-short stream)
     (= ub 0xd2) (next-int stream)
-    (= ub 0xd3) (next-long stream)))
+    (= ub 0xd3) (next-long stream)
+    (= ub 0xca) (next-float stream)
+    (= ub 0xcb) (next-double stream)))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
