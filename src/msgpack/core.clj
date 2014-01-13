@@ -140,7 +140,8 @@
     (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
     (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
 
-(declare unpack-stream-map)
+(declare unpack-stream-map, unpack-ext)
+
 (defn- unpack-stream
   ([n stream]
     (for [_ (range n)]
@@ -183,11 +184,17 @@
      (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream)
      (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream)
 
-     (= ub 0xd4) (Extension. (next-byte stream) (next-bytes 1 stream))
-     (= ub 0xd5) (Extension. (next-byte stream) (next-bytes 2 stream))
-     (= ub 0xd6) (Extension. (next-byte stream) (next-bytes 4 stream))
-     (= ub 0xd7) (Extension. (next-byte stream) (next-bytes 8 stream))
-     (= ub 0xd8) (Extension. (next-byte stream) (next-bytes 16 stream)))))
+     (= ub 0xd4) (unpack-ext 1 stream)
+     (= ub 0xd5) (unpack-ext 2 stream)
+     (= ub 0xd6) (unpack-ext 4 stream)
+     (= ub 0xd7) (unpack-ext 8 stream)
+     (= ub 0xd8) (unpack-ext 16 stream)
+     (= ub 0xc7) (unpack-ext (unsigned (next-byte stream)) stream)
+     (= ub 0xc8) (unpack-ext (unsigned (next-short stream)) stream)
+     (= ub 0xc9) (unpack-ext (unsigned (next-int stream)) stream))))
+
+(defn- unpack-ext [n stream]
+  (Extension. (next-byte stream) (next-bytes n stream)))
 
 (defn- unpack-stream-map [n stream]
   (apply hash-map (unpack-stream n stream)))
