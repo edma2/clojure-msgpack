@@ -96,7 +96,7 @@
 
 (deftest bin-test
   (testing "bin 8"
-    (packable (ubytes nil) [0xc4 0x00])
+    (packable (byte-array 0) [0xc4 0x00])
     (packable (ubytes [0x80]) [0xc4 0x01 0x80])
     (packable (ubytes (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
     (packable (ubytes (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
