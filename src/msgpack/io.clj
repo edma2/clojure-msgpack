@@ -55,8 +55,10 @@
 (defn next-float [stream] (.readFloat stream))
 (defn next-double [stream] (.readDouble stream))
 (defn next-bytes [n stream]
-  (let [bytes (byte-array n)]
-    (assert (= n (.read stream bytes)))
-    bytes))
+  (if (zero? n) (byte-array 0)
+    (let [bytes (byte-array n)
+          bytes-read (.read stream bytes)]
+      (assert (= n bytes-read))
+      bytes)))
 
 (defn next-string [n stream] (String. (next-bytes n stream)))
