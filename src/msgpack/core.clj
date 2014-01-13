@@ -140,6 +140,7 @@
     (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
     (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
 
+(declare unpack-stream-map)
 (defn- unpack-stream
   ([n stream]
     (for [_ (range n)]
@@ -175,7 +176,15 @@
      (= (bit-and 2r11110000 b) 2r10010000)
        (unpack-stream (bit-and 2r1111 b) stream)
      (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream)
-     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream))))
+     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream)
+
+     (= (bit-and 2r11110000 b) 2r10000000)
+       (unpack-stream-map (* 2 (bit-and 2r1111 b)) stream)
+     (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream)
+     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream))))
+
+(defn- unpack-stream-map [n stream]
+  (apply hash-map (unpack-stream n stream)))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
