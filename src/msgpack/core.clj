@@ -181,7 +181,13 @@
      (= (bit-and 2r11110000 b) 2r10000000)
        (unpack-stream-map (* 2 (bit-and 2r1111 b)) stream)
      (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream)
-     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream))))
+     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream)
+
+     (= ub 0xd4) (Extension. (next-byte stream) (next-bytes 1 stream))
+     (= ub 0xd5) (Extension. (next-byte stream) (next-bytes 2 stream))
+     (= ub 0xd6) (Extension. (next-byte stream) (next-bytes 4 stream))
+     (= ub 0xd7) (Extension. (next-byte stream) (next-bytes 8 stream))
+     (= ub 0xd8) (Extension. (next-byte stream) (next-bytes 16 stream)))))
 
 (defn- unpack-stream-map [n stream]
   (apply hash-map (unpack-stream n stream)))
