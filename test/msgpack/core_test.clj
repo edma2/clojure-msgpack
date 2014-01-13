@@ -7,7 +7,8 @@
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# ~bytes]
-     (is (= (seq (ubytes bytes#)) (seq (pack thing#))))))
+     (is (= (seq (ubytes bytes#)) (seq (pack thing#))))
+     (is (= thing# (unpack (ubytes bytes#))))))
 
 (deftest nil-test
   (testing "nil"
