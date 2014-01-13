@@ -14,11 +14,10 @@
   Short (unsigned [n] (bit-and 0xffff n))
   Integer (unsigned [n] (bit-and 0xffffffff n))
 
-  Long ; Might return a BigInt
+  Long
   (unsigned [n]
     (if (neg? n)
       (bigint (.and (biginteger n) (biginteger 0xffffffffffffffff)))
-      ;; bigint stuff
       n)))
 
 (defn ubyte
