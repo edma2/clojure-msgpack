@@ -17,7 +17,7 @@
   Long ; Might return a BigInt
   (unsigned [n]
     (if (neg? n)
-      (.and (biginteger n) (biginteger 0xffffffffffffffff))
+      (bigint (.and (biginteger n) (biginteger 0xffffffffffffffff)))
       ;; bigint stuff
       n)))
 
