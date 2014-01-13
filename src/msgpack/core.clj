@@ -144,8 +144,7 @@
 
 (defn- unpack-stream
   ([n stream]
-    (for [_ (range n)]
-      (unpack-stream stream)))
+    (doall (for [_ (range n)] (unpack-stream stream))))
   ([stream]
    (cond-let [b (next-byte stream)
               ub (unsigned b)]
