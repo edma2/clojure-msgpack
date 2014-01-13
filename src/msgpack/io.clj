@@ -4,6 +4,23 @@
            java.io.ByteArrayInputStream
            java.io.DataInputStream))
 
+(defprotocol Unsignable
+  "A number whose bit pattern can be interpreted as an unsigned value
+  instead of two's complement (signed)."
+  (unsigned [n]))
+
+(extend-protocol Unsignable
+  Byte (unsigned [n] (bit-and 0xff n))
+  Short (unsigned [n] (bit-and 0xffff n))
+  Integer (unsigned [n] (bit-and 0xffffffff n))
+
+  Long ; Might return a BigInt
+  (unsigned [n]
+    (if (neg? n)
+      (.and (biginteger n) (biginteger 0xffffffffffffffff))
+      ;; bigint stuff
+      n)))
+
 (defn ubyte
   "Treat n as if it were an unsigned byte literal. If n is greater
   than the maximum value of a signed byte (127), convert it to a
