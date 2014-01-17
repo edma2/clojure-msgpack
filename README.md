@@ -4,6 +4,9 @@ clojure-msgpack is a library for
 * serializing native Clojure data structures as MessagePack byte arrays.
 * deserializing MessagePack byte arrays into native Clojure data structures.
 
+It strives to be minimal and clean, and brings in no dependencies except
+Clojure itself.
+
 ## Usage
 
 ```clojure
