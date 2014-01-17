@@ -3,11 +3,26 @@
             [msgpack.io :refer :all]
             [msgpack.core :refer :all]))
 
+(defn- normalize
+  "Byte arrays can't be compared. We need to turn them into Seqs."
+  [x]
+  (condp = (class x)
+    (Class/forName "[B") (seq x)
+    clojure.lang.Sequential (map normalize x)
+    clojure.lang.IPersistentMap
+      (let [ks (keys x)
+            vs (map x keys)]
+        (hash-map (normalize ks) (normalize vs)))
+    nil))
+
+(defn- eqv? [x y]
+  (= (normalize x) (normalize y)))
+
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# (ubytes ~bytes)]
-     (is (= (seq bytes#) (seq (pack thing#))))
-     (is (= thing# (unpack bytes#)))))
+     (is (eqv? bytes# (pack thing#)))
+     (is (eqv? thing# (unpack bytes#)))))
 
 (deftest nil-test
   (testing "nil"
