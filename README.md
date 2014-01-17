@@ -16,6 +16,8 @@ Clojure itself.
 ; #<byte[] [B@5984b649>
 
 ; Declare records and types as Extended types.
+(defstruct Employee [name])
+
 (defext Employee 1 [e]
   (.getBytes (:name e)))
 
