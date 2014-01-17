@@ -3,17 +3,27 @@
             [msgpack.io :refer :all]
             [msgpack.core :refer :all]))
 
-(defn- normalize
-  "Byte arrays can't be compared. We need to turn them into Seqs."
-  [x]
-  (condp = (class x)
-    (Class/forName "[B") (seq x)
-    clojure.lang.Sequential (map normalize x)
-    clojure.lang.IPersistentMap
-      (let [ks (keys x)
-            vs (map x keys)]
-        (hash-map (normalize ks) (normalize vs)))
-    nil))
+;; Byte arrays can't be compared. We need to turn them into Seqs.
+(defmulti normalize class)
+
+(defmethod normalize (Class/forName "[B") [x]
+  (seq x))
+
+(defmethod normalize clojure.lang.Keyword [k] (name k))
+(defmethod normalize clojure.lang.Symbol [s] (name s))
+
+(defmethod normalize clojure.lang.Sequential [x]
+  (map normalize x))
+
+(defmethod normalize clojure.lang.IPersistentMap [x]
+  (let [ks (keys x)
+        vs (map x ks)]
+    (apply hash-map (interleave (normalize ks) (normalize vs)))))
+
+(defmethod normalize msgpack.core.Extension [x]
+  (msgpack.core.Extension. (:type x) (normalize (:data x))))
+
+(defmethod normalize :default [x] x)
 
 (defn- eqv? [x y]
   (= (normalize x) (normalize y)))
