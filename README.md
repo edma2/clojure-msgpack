@@ -38,7 +38,4 @@ Clojure itself.
 
 ## License
 
-Copyright © 2013 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+clojure-msgpack is MIT licensed. See the included LICENSE file for more details.
