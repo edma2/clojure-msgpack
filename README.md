@@ -7,6 +7,10 @@ clojure-msgpack is a library for
 It strives to be minimal and clean, and brings in no dependencies except
 Clojure itself.
 
+## Installation
+
+See https://clojars.org/clojure-msgpack
+
 ## Usage
 
 ```clojure
