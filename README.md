@@ -23,6 +23,12 @@ clojure-msgpack is a library for
 
 ; Or encode an extension directly
 (pack (Extension. 1 (.getBytes "Bob")))
+
+(pack {:compact true :schema 0})
+; #<byte[] [B@59ce1eed>
+
+(unpack (pack {:compact true :schema 0}))
+; {"schema" 0, "compact" true}
 ```
 
 ## License
