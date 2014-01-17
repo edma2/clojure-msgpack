@@ -14,7 +14,7 @@
   "Treat an existing class as a MessagePack extended type.
   As a side-effect, the class will extend the Packable protocol.
 
-  (defstruct Employee [name])
+  (defrecord Employee [name])
 
   (defext Employee 1 [e]
     (.getBytes (:name e)))
