@@ -1,11 +1,14 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
             [msgpack.io :refer :all]
-            [msgpack.core :refer :all]))
+            [msgpack.core :refer :all]
+            [simple-check.generators :as gen]
+            [simple-check.properties :as prop]
+            [simple-check.clojure-test :refer [defspec]]))
 
 (defmulti fix class)
 (defmethod fix :default [x] x)
-(defmethod fix clojure.lang.Ratio [r] (/ (numerator r) (denominator r)))
+(defmethod fix clojure.lang.Ratio [r] (double r))
 (defmethod fix (Class/forName "[B") [x] (seq x))
 (defmethod fix Character [c] (str c))
 (defmethod fix clojure.lang.Keyword [k] (name k))
@@ -26,6 +29,13 @@
          bytes# (ubytes ~bytes)]
      (is (=== bytes# (pack thing#)))
      (is (=== thing# (unpack bytes#)))))
+
+(defn- roundtrip? [v] (=== v (unpack (pack v))))
+
+(defspec check-randomly
+  50
+  (prop/for-all [v (gen/map gen/any gen/any)]
+    (roundtrip? v)))
 
 (deftest nil-test
   (testing "nil"
