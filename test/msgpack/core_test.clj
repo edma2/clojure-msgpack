@@ -3,44 +3,29 @@
             [msgpack.io :refer :all]
             [msgpack.core :refer :all]))
 
-;; Byte arrays can't be compared. We need to turn them into Seqs.
-(defmulti normalize class)
-
-(defmethod normalize (Class/forName "[B") [x]
-  (seq x))
-
-(defmethod normalize clojure.lang.Keyword [k] (name k))
-(defmethod normalize clojure.lang.Symbol [s] (name s))
-
-(defmethod normalize clojure.lang.Sequential [x]
-  (map normalize x))
-
-(defmethod normalize clojure.lang.IPersistentMap [x]
+(defmulti fix class)
+(defmethod fix :default [x] x)
+(defmethod fix clojure.lang.Ratio [r] (/ (numerator r) (denominator r)))
+(defmethod fix (Class/forName "[B") [x] (seq x))
+(defmethod fix Character [c] (str c))
+(defmethod fix clojure.lang.Keyword [k] (name k))
+(defmethod fix clojure.lang.Symbol [s] (name s))
+(defmethod fix clojure.lang.Sequential [x] (map fix x))
+(defmethod fix clojure.lang.IPersistentSet [set] (fix (vec set)))
+(defmethod fix clojure.lang.IPersistentMap [x]
   (let [ks (keys x)
         vs (map x ks)]
-    (apply hash-map (interleave (normalize ks) (normalize vs)))))
+    (apply hash-map (interleave (fix ks) (fix vs)))))
+(defmethod fix msgpack.core.Extension [x]
+  (msgpack.core.Extension. (:type x) (fix (:data x))))
 
-(defmethod normalize msgpack.core.Extension [x]
-  (msgpack.core.Extension. (:type x) (normalize (:data x))))
-
-(defmethod normalize clojure.lang.Ratio [r]
-  (/ (numerator r) (denominator r)))
-
-(defmethod normalize clojure.lang.IPersistentSet [set]
-  (normalize (vec set)))
-
-(defmethod normalize Character [c] (str c))
-
-(defmethod normalize :default [x] x)
-
-(defn- eqv? [x y]
-  (= (normalize x) (normalize y)))
+(defn- === [x y] (= (fix x) (fix y)))
 
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# (ubytes ~bytes)]
-     (is (eqv? bytes# (pack thing#)))
-     (is (eqv? thing# (unpack bytes#)))))
+     (is (=== bytes# (pack thing#)))
+     (is (=== thing# (unpack bytes#)))))
 
 (deftest nil-test
   (testing "nil"
