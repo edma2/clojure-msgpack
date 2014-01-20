@@ -64,6 +64,10 @@
   (pack [x]
     (ubytes (cons 0xcb (double->bytes x))))
 
+  clojure.lang.Ratio
+  (pack [r] (pack (double r)))
+
+  Character (pack [c] (pack (str c)))
   clojure.lang.Keyword (pack [k] (pack (name k)))
   clojure.lang.Symbol (pack [s] (pack (name s)))
   String

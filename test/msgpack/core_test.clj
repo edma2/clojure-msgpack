@@ -23,6 +23,14 @@
 (defmethod normalize msgpack.core.Extension [x]
   (msgpack.core.Extension. (:type x) (normalize (:data x))))
 
+(defmethod normalize clojure.lang.Ratio [r]
+  (/ (numerator r) (denominator r)))
+
+(defmethod normalize clojure.lang.IPersistentSet [set]
+  (normalize (vec set)))
+
+(defmethod normalize Character [c] (str c))
+
 (defmethod normalize :default [x] x)
 
 (defn- eqv? [x y]
