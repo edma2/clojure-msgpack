@@ -20,7 +20,7 @@
         vs (map x ks)]
     (apply hash-map (interleave (fix ks) (fix vs)))))
 (defmethod fix msgpack.core.Extension [x]
-  (msgpack.core.Extension. (:type x) (fix (:data x))))
+  (->Extension (:type x) (fix (:data x))))
 
 (defn- === [x y] (= (fix x) (fix y)))
 
@@ -31,8 +31,18 @@
      (is (=== thing# (unpack bytes#)))))
 
 (defspec check-randomly
-  10
+  5
   (prop/for-all [v (gen/map gen/any gen/any)]
+    (=== v (unpack (pack v)))))
+
+(def gen-ext
+  (gen/fmap (partial apply ->Extension)
+            (gen/tuple (gen/such-that #(<= 0 % 127) gen/byte)
+                       gen/bytes)))
+
+(defspec check-extensions
+  100
+  (prop/for-all [v (gen/map gen/keyword (gen/vector gen-ext))]
     (=== v (unpack (pack v)))))
 
 (deftest nil-test
@@ -169,7 +179,7 @@
                            (interleave (range 0 16) (repeat 16 5))))))
 
 (defn- ext [type data]
-  (msgpack.core.Extension. type (ubytes data)))
+  (->Extension type (ubytes data)))
 
 (deftest ext-test
   (testing "fixext 1"

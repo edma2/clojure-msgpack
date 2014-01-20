@@ -31,7 +31,7 @@ See https://clojars.org/clojure-msgpack
 ; ("0xc7" "0x3" "0x1" "0x62" "0x6f" "0x62")
 
 ; Or encode an extension directly
-(pack (Extension. 1 (.getBytes "Bob")))
+(pack (->Extension 1 (.getBytes "Bob")))
 
 (pack {:compact true :schema 0})
 ; #<byte[] [B@59ce1eed>

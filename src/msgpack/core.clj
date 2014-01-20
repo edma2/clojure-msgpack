@@ -23,7 +23,7 @@
 
   (extend-protocol Packable
     Employee
-    (pack [e] (pack (Extension. 1 (.getBytes (:name e))))))
+    (pack [e] (pack (->Extension 1 (.getBytes (:name e))))))
 
   and this will work:
   (pack (Employee. employee-name))"
@@ -32,7 +32,7 @@
           "[-1, -128]: reserved for future pre-defined extensions.")
   `(extend-protocol Packable
      ~class
-     (pack ~args (pack (Extension. ~type ~body)))))
+     (pack ~args (pack (->Extension ~type ~body)))))
 
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
@@ -200,7 +200,7 @@
      (= ub 0xc9) (unpack-ext (unsigned (next-int stream)) stream))))
 
 (defn- unpack-ext [n stream]
-  (Extension. (next-byte stream) (next-bytes n stream)))
+  (->Extension (next-byte stream) (next-bytes n stream)))
 
 (defn- unpack-stream-map [n stream]
   (apply hash-map (unpack-stream (* 2 n) stream)))
