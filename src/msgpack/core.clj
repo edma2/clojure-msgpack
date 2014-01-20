@@ -91,6 +91,9 @@
       (<= len 0xffff)     (ubytes (concat [0xde] (short->bytes len) bytes))
       (<= len 0xffffffff) (ubytes (concat [0xdf] (int->bytes len) bytes))))
 
+  clojure.lang.IPersistentSet
+  (pack [set] (pack (vec set)))
+
   Extension
   (pack [ext]
     (cond-let [type (:type ext)
