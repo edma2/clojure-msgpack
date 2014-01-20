@@ -30,12 +30,10 @@
      (is (=== bytes# (pack thing#)))
      (is (=== thing# (unpack bytes#)))))
 
-(defn- roundtrip? [v] (=== v (unpack (pack v))))
-
 (defspec check-randomly
-  50
+  10
   (prop/for-all [v (gen/map gen/any gen/any)]
-    (roundtrip? v)))
+    (=== v (unpack (pack v)))))
 
 (deftest nil-test
   (testing "nil"
