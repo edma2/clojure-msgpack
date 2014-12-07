@@ -177,6 +177,13 @@
     (packable (zipmap (range 0 16) (repeat 16 5))
                    (concat [0xde 0x00 0x10]
                            (interleave (range 0 16) (repeat 16 5))))))
+                           
+(deftest map-keywordize-test
+  (testing ":keywordize"
+    (let [m {:key "value"}
+          bytes (pack m)]
+      (is (= (unpack bytes) {"key" "value"}))
+      (is (= (unpack bytes :keywordize) m)))))
 
 (defn- ext [type data]
   (->Extension type (ubytes data)))
