@@ -150,9 +150,9 @@
 (declare unpack-stream-map, unpack-ext)
 
 (defn- unpack-stream
-  ([n stream]
-    (doall (for [_ (range n)] (unpack-stream stream))))
-  ([stream]
+  ([n stream flags]
+    (doall (for [_ (range n)] (unpack-stream stream flags))))
+  ([stream flags]
    (cond-let [b (next-byte stream)
               ub (unsigned b)]
      (= ub 0xc0) nil
@@ -181,14 +181,14 @@
      (= ub 0xc6) (next-bytes (unsigned (next-int stream)) stream)
 
      (= (bit-and 2r11110000 b) 2r10010000)
-       (unpack-stream (bit-and 2r1111 b) stream)
-     (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream)
-     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream)
+       (unpack-stream (bit-and 2r1111 b) stream flags)
+     (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream flags)
+     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream flags)
 
      (= (bit-and 2r11110000 b) 2r10000000)
-       (unpack-stream-map (bit-and 2r1111 b) stream)
-     (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream)
-     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream)
+       (unpack-stream-map (bit-and 2r1111 b) stream flags)
+     (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream flags)
+     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream flags)
 
      (= ub 0xd4) (unpack-ext 1 stream)
      (= ub 0xd5) (unpack-ext 2 stream)
@@ -212,10 +212,11 @@
 (defn- keywordize [m]
   (map-keys try-keyword m))
 
-;; TODO: make keywordize optional
-(defn- unpack-stream-map [n stream]
-  (let [orig (apply hash-map (unpack-stream (* 2 n) stream))]
-    (keywordize orig)))
+(defn- unpack-stream-map [n stream flags]
+  (let [orig (apply hash-map (unpack-stream (* 2 n) stream flags))]
+    (if (contains? flags :keywordize)
+      (keywordize orig)
+      orig)))
 
-(defn unpack [bytes]
-  (unpack-stream (byte-stream bytes)))
+(defn unpack [bytes & flags]
+  (unpack-stream (byte-stream bytes) (set flags)))
