@@ -212,6 +212,7 @@
 (defn- keywordize [m]
   (map-keys try-keyword m))
 
+;; TODO: make keywordize optional
 (defn- unpack-stream-map [n stream]
   (let [orig (apply hash-map (unpack-stream (* 2 n) stream))]
     (keywordize orig)))
