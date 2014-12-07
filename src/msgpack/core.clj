@@ -202,8 +202,19 @@
 (defn- unpack-ext [n stream]
   (->Extension (next-byte stream) (next-bytes n stream)))
 
+(defn- map-keys [f m]
+  (into {} (for [[k v] m] [(f k) v])))
+  
+(defn- try-keyword [v]
+  (let [kw (keyword v)]
+    (if (nil? kw) v kw)))
+
+(defn- keywordize [m]
+  (map-keys try-keyword m))
+
 (defn- unpack-stream-map [n stream]
-  (apply hash-map (unpack-stream (* 2 n) stream)))
+  (let [orig (apply hash-map (unpack-stream (* 2 n) stream))]
+    (keywordize orig)))
 
 (defn unpack [bytes]
   (unpack-stream (byte-stream bytes)))
