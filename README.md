@@ -33,8 +33,8 @@ See https://clojars.org/clojure-msgpack
 (pack {:compact true :schema 0})
 ; #<byte[] [B@59ce1eed>
 
-(unpack (pack {:compact true :schema 0}))
-; {"schema" 0, "compact" true}
+(unpack (pack {:compact true :schema 0}) :keywordize)
+; {:schema 0, :compact true}
 ```
 
 ## License
