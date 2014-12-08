@@ -33,6 +33,7 @@ See https://clojars.org/clojure-msgpack
 (pack {:compact true :schema 0})
 ; #<byte[] [B@59ce1eed>
 
+; Pass the :keywordize flag to unpack map keys as Clojure keywords.
 (unpack (pack {:compact true :schema 0}) :keywordize)
 ; {:schema 0, :compact true}
 ```
