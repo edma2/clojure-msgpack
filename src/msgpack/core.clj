@@ -74,26 +74,26 @@
   (pack [s]
     (cond-let [bytes (.getBytes s)
                len (count bytes)]
-      (<= len 0x1f)       (ubytes (cons (bit-or 2r10100000 len) bytes))
-      (<= len 0xff)       (ubytes (concat [0xd9] (byte->bytes len) bytes))
-      (<= len 0xffff)     (ubytes (concat [0xda] (short->bytes len) bytes))
-      (<= len 0xffffffff) (ubytes (concat [0xdb] (int->bytes len) bytes))))
+              (<= len 0x1f)       (ubytes (cons (bit-or 2r10100000 len) bytes))
+              (<= len 0xff)       (ubytes (concat [0xd9] (byte->bytes len) bytes))
+              (<= len 0xffff)     (ubytes (concat [0xda] (short->bytes len) bytes))
+              (<= len 0xffffffff) (ubytes (concat [0xdb] (int->bytes len) bytes))))
 
   clojure.lang.Sequential
   (pack [seq]
     (cond-let [len (count seq)
                bytes (pack-all seq)]
-      (<= len 0xf)        (ubytes (cons (bit-or 2r10010000 len) bytes))
-      (<= len 0xffff)     (ubytes (concat [0xdc] (short->bytes len) bytes))
-      (<= len 0xffffffff) (ubytes (concat [0xdd] (int->bytes len) bytes))))
+              (<= len 0xf)        (ubytes (cons (bit-or 2r10010000 len) bytes))
+              (<= len 0xffff)     (ubytes (concat [0xdc] (short->bytes len) bytes))
+              (<= len 0xffffffff) (ubytes (concat [0xdd] (int->bytes len) bytes))))
 
   clojure.lang.IPersistentMap
   (pack [map]
     (cond-let [len (count map)
                bytes (pack-all (interleave (keys map) (vals map)))]
-      (<= len 0xf)        (ubytes (cons (bit-or 2r10000000 len) bytes))
-      (<= len 0xffff)     (ubytes (concat [0xde] (short->bytes len) bytes))
-      (<= len 0xffffffff) (ubytes (concat [0xdf] (int->bytes len) bytes))))
+              (<= len 0xf)        (ubytes (cons (bit-or 2r10000000 len) bytes))
+              (<= len 0xffff)     (ubytes (concat [0xde] (short->bytes len) bytes))
+              (<= len 0xffffffff) (ubytes (concat [0xdf] (int->bytes len) bytes))))
 
   clojure.lang.IPersistentSet
   (pack [set] (pack (vec set)))
@@ -103,14 +103,14 @@
     (cond-let [type (:type ext)
                bytes (:data ext)
                len (count bytes)]
-      (= len 1)           (ubytes (concat [0xd4 type] bytes))
-      (= len 2)           (ubytes (concat [0xd5 type] bytes))
-      (= len 4)           (ubytes (concat [0xd6 type] bytes))
-      (= len 8)           (ubytes (concat [0xd7 type] bytes))
-      (= len 16)          (ubytes (concat [0xd8 type] bytes))
-      (<= len 0xff)       (ubytes (concat (cons 0xc7 (byte->bytes len)) (cons type bytes)))
-      (<= len 0xffff)     (ubytes (concat (cons 0xc8 (short->bytes len)) (cons type bytes)))
-      (<= len 0xffffffff) (ubytes (concat (cons 0xc9 (int->bytes len)) (cons type bytes))))))
+              (= len 1)           (ubytes (concat [0xd4 type] bytes))
+              (= len 2)           (ubytes (concat [0xd5 type] bytes))
+              (= len 4)           (ubytes (concat [0xd6 type] bytes))
+              (= len 8)           (ubytes (concat [0xd7 type] bytes))
+              (= len 16)          (ubytes (concat [0xd8 type] bytes))
+              (<= len 0xff)       (ubytes (concat (cons 0xc7 (byte->bytes len)) (cons type bytes)))
+              (<= len 0xffff)     (ubytes (concat (cons 0xc8 (short->bytes len)) (cons type bytes)))
+              (<= len 0xffffffff) (ubytes (concat (cons 0xc9 (int->bytes len)) (cons type bytes))))))
 
 ;; Clojure bug when extending primitive types inside extend-protocol.
 ;; https://groups.google.com/forum/#!msg/clojure/PwmzA12By-I/nYBdNu2IeyMJ
@@ -143,68 +143,68 @@
 
 (defn- pack-bytes [bytes]
   (cond-let [len (count bytes)]
-    (<= len 0xff)       (ubytes (concat [0xc4] (byte->bytes len) bytes))
-    (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
-    (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
+            (<= len 0xff)       (ubytes (concat [0xc4] (byte->bytes len) bytes))
+            (<= len 0xffff)     (ubytes (concat [0xc5] (short->bytes len) bytes))
+            (<= len 0xffffffff) (ubytes (concat [0xc6] (int->bytes len) bytes))))
 
 (declare unpack-stream-map, unpack-ext)
 
 (defn- unpack-stream
   ([n stream flags]
-    (doall (for [_ (range n)] (unpack-stream stream flags))))
+   (doall (for [_ (range n)] (unpack-stream stream flags))))
   ([stream flags]
    (cond-let [b (next-byte stream)
               ub (unsigned b)]
-     (= ub 0xc0) nil
-     (= ub 0xc2) false
-     (= ub 0xc3) true
-     (<= -32 b 127) b
-     (= ub 0xcc) (unsigned (next-byte stream))
-     (= ub 0xcd) (unsigned (next-short stream))
-     (= ub 0xce) (unsigned (next-int stream))
-     (= ub 0xcf) (unsigned (next-long stream))
-     (= ub 0xd0) (next-byte stream)
-     (= ub 0xd1) (next-short stream)
-     (= ub 0xd2) (next-int stream)
-     (= ub 0xd3) (next-long stream)
-     (= ub 0xca) (next-float stream)
-     (= ub 0xcb) (next-double stream)
+             (= ub 0xc0) nil
+             (= ub 0xc2) false
+             (= ub 0xc3) true
+             (<= -32 b 127) b
+             (= ub 0xcc) (unsigned (next-byte stream))
+             (= ub 0xcd) (unsigned (next-short stream))
+             (= ub 0xce) (unsigned (next-int stream))
+             (= ub 0xcf) (unsigned (next-long stream))
+             (= ub 0xd0) (next-byte stream)
+             (= ub 0xd1) (next-short stream)
+             (= ub 0xd2) (next-int stream)
+             (= ub 0xd3) (next-long stream)
+             (= ub 0xca) (next-float stream)
+             (= ub 0xcb) (next-double stream)
 
-     (= (bit-and 2r11100000 b) 2r10100000)
-       (next-string (bit-and 2r11111 b) stream)
-     (= ub 0xd9) (next-string (unsigned (next-byte stream)) stream)
-     (= ub 0xda) (next-string (unsigned (next-short stream)) stream)
-     (= ub 0xdb) (next-string (unsigned (next-int stream)) stream)
+             (= (bit-and 2r11100000 b) 2r10100000)
+             (next-string (bit-and 2r11111 b) stream)
+             (= ub 0xd9) (next-string (unsigned (next-byte stream)) stream)
+             (= ub 0xda) (next-string (unsigned (next-short stream)) stream)
+             (= ub 0xdb) (next-string (unsigned (next-int stream)) stream)
 
-     (= ub 0xc4) (next-bytes (unsigned (next-byte stream)) stream)
-     (= ub 0xc5) (next-bytes (unsigned (next-short stream)) stream)
-     (= ub 0xc6) (next-bytes (unsigned (next-int stream)) stream)
+             (= ub 0xc4) (next-bytes (unsigned (next-byte stream)) stream)
+             (= ub 0xc5) (next-bytes (unsigned (next-short stream)) stream)
+             (= ub 0xc6) (next-bytes (unsigned (next-int stream)) stream)
 
-     (= (bit-and 2r11110000 b) 2r10010000)
-       (unpack-stream (bit-and 2r1111 b) stream flags)
-     (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream flags)
-     (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream flags)
+             (= (bit-and 2r11110000 b) 2r10010000)
+             (unpack-stream (bit-and 2r1111 b) stream flags)
+             (= ub 0xdc) (unpack-stream (unsigned (next-short stream)) stream flags)
+             (= ub 0xdd) (unpack-stream (unsigned (next-int stream)) stream flags)
 
-     (= (bit-and 2r11110000 b) 2r10000000)
-       (unpack-stream-map (bit-and 2r1111 b) stream flags)
-     (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream flags)
-     (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream flags)
+             (= (bit-and 2r11110000 b) 2r10000000)
+             (unpack-stream-map (bit-and 2r1111 b) stream flags)
+             (= ub 0xde) (unpack-stream-map (unsigned (next-short stream)) stream flags)
+             (= ub 0xdf) (unpack-stream-map (unsigned (next-int stream)) stream flags)
 
-     (= ub 0xd4) (unpack-ext 1 stream)
-     (= ub 0xd5) (unpack-ext 2 stream)
-     (= ub 0xd6) (unpack-ext 4 stream)
-     (= ub 0xd7) (unpack-ext 8 stream)
-     (= ub 0xd8) (unpack-ext 16 stream)
-     (= ub 0xc7) (unpack-ext (unsigned (next-byte stream)) stream)
-     (= ub 0xc8) (unpack-ext (unsigned (next-short stream)) stream)
-     (= ub 0xc9) (unpack-ext (unsigned (next-int stream)) stream))))
+             (= ub 0xd4) (unpack-ext 1 stream)
+             (= ub 0xd5) (unpack-ext 2 stream)
+             (= ub 0xd6) (unpack-ext 4 stream)
+             (= ub 0xd7) (unpack-ext 8 stream)
+             (= ub 0xd8) (unpack-ext 16 stream)
+             (= ub 0xc7) (unpack-ext (unsigned (next-byte stream)) stream)
+             (= ub 0xc8) (unpack-ext (unsigned (next-short stream)) stream)
+             (= ub 0xc9) (unpack-ext (unsigned (next-int stream)) stream))))
 
 (defn- unpack-ext [n stream]
   (->Extension (next-byte stream) (next-bytes n stream)))
 
 (defn- map-keys [f m]
   (into {} (for [[k v] m] [(f k) v])))
-  
+
 (defn- try-keyword [v]
   (let [kw (keyword v)]
     (if (nil? kw) v kw)))
