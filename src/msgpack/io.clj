@@ -37,28 +37,28 @@
     (write data-output v)
     (.toByteArray output-stream)))
 
-(defn byte->bytes [n] (->bytes #(.writeByte %1 %2) n))
-(defn short->bytes [n] (->bytes #(.writeShort %1 %2) n))
-(defn int->bytes [n] (->bytes #(.writeInt %1 %2) n))
-(defn long->bytes [n] (->bytes #(.writeLong %1 %2) n))
-(defn float->bytes [x] (->bytes #(.writeFloat %1 %2) x))
-(defn double->bytes [x] (->bytes #(.writeDouble %1 %2) x))
+(defn byte->bytes [n] (->bytes #(.writeByte ^java.io.DataOutputStream %1 %2) n))
+(defn short->bytes [n] (->bytes #(.writeShort ^java.io.DataOutputStream %1 %2) n))
+(defn int->bytes [n] (->bytes #(.writeInt ^java.io.DataOutputStream %1 %2) n))
+(defn long->bytes [n] (->bytes #(.writeLong ^java.io.DataOutputStream %1 %2) n))
+(defn float->bytes [x] (->bytes #(.writeFloat ^java.io.DataOutputStream %1 %2) x))
+(defn double->bytes [x] (->bytes #(.writeDouble ^java.io.DataOutputStream %1 %2) x))
 
 (defn byte-stream [bytes]
   (DataInputStream. (ByteArrayInputStream. (byte-array bytes))))
 
 ;; DataInputStream
-(defn next-byte [stream] (.readByte stream))
-(defn next-short [stream] (.readShort stream))
-(defn next-int [stream] (.readInt stream))
-(defn next-long [stream] (.readLong stream))
-(defn next-float [stream] (.readFloat stream))
-(defn next-double [stream] (.readDouble stream))
+(defn next-byte [stream] (.readByte ^java.io.DataInputStream stream))
+(defn next-short [stream] (.readShort ^java.io.DataInputStream stream))
+(defn next-int [stream] (.readInt ^java.io.DataInputStream stream))
+(defn next-long [stream] (.readLong ^java.io.DataInputStream stream))
+(defn next-float [stream] (.readFloat ^java.io.DataInputStream stream))
+(defn next-double [stream] (.readDouble ^java.io.DataInputStream stream))
 (defn next-bytes [n stream]
   (if (zero? n) (byte-array 0)
-    (let [bytes (byte-array n)
-          bytes-read (.read stream bytes)]
-      (assert (= n bytes-read))
-      bytes)))
+      (let [bytes (byte-array n)
+            bytes-read (.read ^java.io.DataInputStream stream bytes)]
+        (assert (= n bytes-read))
+        bytes)))
 
-(defn next-string [n stream] (String. (next-bytes n stream)))
+(defn next-string [n stream] (String. ^bytes (next-bytes n stream)))
