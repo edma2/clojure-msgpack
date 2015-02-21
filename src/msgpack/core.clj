@@ -28,11 +28,12 @@
   and this will work:
   (pack (Employee. employee-name))"
   [class type args body]
-  (assert (<= 0 type 127)
-          "[-1, -128]: reserved for future pre-defined extensions.")
-  `(extend-protocol Packable
-     ~class
-     (pack ~args (pack (->Extension ~type ~body)))))
+  `(let [type# ~type]
+    (assert (<= 0 type# 127)
+            "[-1, -128]: reserved for future pre-defined extensions.")
+    (extend-protocol Packable
+       ~class
+       (pack ~args (pack (->Extension type# ~body))))))
 
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
