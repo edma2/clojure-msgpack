@@ -72,7 +72,7 @@
   clojure.lang.Symbol (pack [s] (pack (name s)))
   String
   (pack [s]
-    (cond-let [bytes (.getBytes s)
+    (cond-let [bytes (.getBytes s "UTF-8")
                len (count bytes)]
               (<= len 0x1f)       (ubytes (cons (bit-or 2r10100000 len) bytes))
               (<= len 0xff)       (ubytes (concat [0xd9] (byte->bytes len) bytes))
