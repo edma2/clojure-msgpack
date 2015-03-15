@@ -7,10 +7,6 @@
   "A protocol for objects that can be serialized as a MessagePack type."
   (pack-stream [this output-stream]))
 
-(defn- byte-literals
-  [bytes]
-  (map unchecked-byte bytes))
-
 (declare pack-number)
 
 (extend-protocol Packable
