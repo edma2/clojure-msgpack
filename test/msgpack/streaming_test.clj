@@ -6,11 +6,17 @@
   [bytes]
   (map unchecked-byte bytes))
 
+
+(defmacro serializes-as [thing bytes]
+  `(let [thing# ~thing
+         bytes# (byte-literals ~bytes)]
+     (is (= bytes# (pack thing#)))))
+
 (deftest nil-test
   (testing "nil"
-    (is (= (pack nil) (byte-literals [0xc0])))))
+    (serializes-as nil [0xc0])))
 
 (deftest boolean-test
   (testing "booleans"
-    (is (= (pack false) (byte-literals [0xc2])))
-    (is (= (pack true) (byte-literals [0xc3])))))
+    (serializes-as false [0xc2])
+    (serializes-as true [0xc3])))
