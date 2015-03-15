@@ -12,40 +12,55 @@
 (extend-protocol Packable
   nil
   (pack-stream
-    [_ output-stream]
-    (.writeByte output-stream 0xc0))
+    [_ s]
+    (.writeByte s 0xc0))
 
   Boolean
   (pack-stream
-    [bool output-stream]
+    [bool s]
     (if bool
-      (.writeByte output-stream 0xc3)
-      (.writeByte output-stream 0xc2)))
+      (.writeByte s 0xc3)
+      (.writeByte s 0xc2)))
 
   Byte
   (pack-stream
-    [n output-stream]
-    (pack-number n output-stream))
+    [n s]
+    (pack-number n s))
 
   Short
   (pack-stream
-    [n output-stream]
-    (pack-number n output-stream))
+    [n s]
+    (pack-number n s))
 
   Integer
   (pack-stream
-    [n output-stream]
-    (pack-number n output-stream))
+    [n s]
+    (pack-number n s))
 
   Long
   (pack-stream
-    [n output-stream]
-    (pack-number n output-stream))
+    [n s]
+    (pack-number n s))
 
   clojure.lang.BigInt
   (pack-stream
-    [n output-stream]
-    (pack-number n output-stream)))
+    [n s]
+    (pack-number n s))
+
+  ;; TODO floating point numbers should be size-optimized as above
+
+  Float
+  (pack-stream
+    [f s]
+    (do (.writeByte s 0xca) (.writeFloat s f)))
+
+  Double
+  (pack-stream
+    [d s]
+    (do (.writeByte s 0xcb) (.writeDouble s d)))
+
+  clojure.lang.Ratio
+  (pack-stream [r s] (pack-stream (double r) s)))
 
 (defn- pack-number
   "Pack n using the most compact representation possible"
