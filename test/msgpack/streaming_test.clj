@@ -6,7 +6,6 @@
   [bytes]
   (map unchecked-byte bytes))
 
-
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# (byte-literals ~bytes)]
@@ -71,3 +70,28 @@
     (packable 0.0 [0xcb 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00])
     (packable 2.5 [0xcb 0x40 0x04 0x00 0x00 0x00 0x00 0x00 0x00])
     (packable (Math/pow 10 35) [0xcb 0x47 0x33 0x42 0x61 0x72 0xc7 0x4d 0x82])))
+
+(defn- fill [n c]
+  (clojure.string/join "" (repeat n c)))
+
+(deftest str-test
+  (testing "fixstr"
+    (packable "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
+    (packable "" [0xa0])
+    (packable "abc" [0xa3 0x61 0x62 0x63])
+    (packable (fill 31 \a) (cons 0xbf (repeat 31 0x61))))
+  (testing "str 8"
+    (packable (fill 32 \b)
+              (concat [0xd9 0x20] (repeat 32 (byte \b))))
+    (packable (fill 100 \c)
+              (concat [0xd9 0x64] (repeat 100 (byte \c))))
+    (packable (fill 255 \d)
+              (concat [0xd9 0xff] (repeat 255 (byte \d)))))
+  (testing "str 16"
+    (packable (fill 256 \b)
+              (concat [0xda 0x01 0x00] (repeat 256 (byte \b))))
+    (packable (fill 65535 \c)
+              (concat [0xda 0xff 0xff] (repeat 65535 (byte \c)))))
+  (testing "str 32"
+    (packable (fill 65536 \b)
+              (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))

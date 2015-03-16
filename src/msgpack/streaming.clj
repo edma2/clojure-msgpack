@@ -1,11 +1,15 @@
 (ns msgpack.streaming
   (:require [msgpack.io :refer :all])
   (:import java.io.DataOutputStream
-           java.io.ByteArrayOutputStream))
+           java.io.ByteArrayOutputStream
+           java.nio.charset.Charset))
 
 (defprotocol Packable
   "A protocol for objects that can be serialized as a MessagePack type."
   (pack-stream [this output-stream]))
+
+(defmacro cond-let [bindings & clauses]
+  `(let ~bindings (cond ~@clauses)))
 
 (declare pack-number)
 
@@ -60,7 +64,26 @@
     (do (.writeByte s 0xcb) (.writeDouble s d)))
 
   clojure.lang.Ratio
-  (pack-stream [r s] (pack-stream (double r) s)))
+  (pack-stream
+    [r s]
+    (pack-stream (double r) s))
+
+  String
+  (pack-stream
+    [str s]
+    (cond-let [bytes (.getBytes str (Charset/forName "UTF-8"))
+               len (count bytes)]
+              (<= len 0x1f)
+              (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
+
+              (<= len 0xff)
+              (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes))
+
+              (<= len 0xffff)
+              (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
+
+              (<= len 0xffffffff)
+              (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes)))))
 
 (defn- pack-number
   "Pack n using the most compact representation possible"
