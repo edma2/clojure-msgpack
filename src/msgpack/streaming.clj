@@ -5,7 +5,7 @@
            java.nio.charset.Charset))
 
 (defprotocol Packable
-  "A protocol for objects that can be serialized as a MessagePack type."
+  "Objects that can be serialized as MessagePack types"
   (pack-stream [this output-stream]))
 
 (defmacro cond-let [bindings & clauses]
