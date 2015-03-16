@@ -112,6 +112,7 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s))))
 
+  ; TODO: try to deserialize keys as keywords
   clojure.lang.IPersistentMap
   (pack-stream [map s]
     (cond-let [len (count map)
