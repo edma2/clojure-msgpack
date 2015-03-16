@@ -77,34 +77,47 @@
 
   Extended
   (pack-stream
-   [e s]
-   (let [type (:type e)
-         data (byte-array (:data e))
-         len (count data)]
-     (do
-       (cond
-         (= len 1) (.writeByte s 0xd4)
-         (= len 2) (.writeByte s 0xd5)
-         (= len 4) (.writeByte s 0xd6)
-         (= len 8) (.writeByte s 0xd7)
-         (= len 16) (.writeByte s 0xd8)
-         (<= len 0xff) (do (.writeByte s 0xc7) (.writeByte s len))
-         (<= len 0xffff) (do (.writeByte s 0xc8) (.writeShort s len))
-         (<= len 0xffffffff) (do (.writeByte s 0xc9) (.writeInt s len)))
-       (.writeByte s type)
-       (.write s data))))
+    [e s]
+    (let [type (:type e)
+          data (byte-array (:data e))
+          len (count data)]
+      (do
+        (cond
+          (= len 1) (.writeByte s 0xd4)
+          (= len 2) (.writeByte s 0xd5)
+          (= len 4) (.writeByte s 0xd6)
+          (= len 8) (.writeByte s 0xd7)
+          (= len 16) (.writeByte s 0xd8)
+          (<= len 0xff) (do (.writeByte s 0xc7) (.writeByte s len))
+          (<= len 0xffff) (do (.writeByte s 0xc8) (.writeShort s len))
+          (<= len 0xffffffff) (do (.writeByte s 0xc9) (.writeInt s len)))
+        (.writeByte s type)
+        (.write s data))))
 
   clojure.lang.Sequential
-  (pack-stream [coll s]
-    (cond-let [len (count coll)]
-      (<= len 0xf)
-      (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll coll s))
+  (pack-stream [seq s]
+    (cond-let [len (count seq)]
+              (<= len 0xf)
+              (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll seq s))
 
-      (<= len 0xffff)
-      (do (.writeByte s 0xdc) (.writeShort s len) (pack-coll coll s))
+              (<= len 0xffff)
+              (do (.writeByte s 0xdc) (.writeShort s len) (pack-coll seq s))
 
-      (<= len 0xffffffff)
-      (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll coll s)))))
+              (<= len 0xffffffff)
+              (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s))))
+
+  clojure.lang.IPersistentMap
+  (pack-stream [map s]
+    (cond-let [len (count map)
+               pairs (interleave (keys map) (vals map))]
+              (<= len 0xf)
+              (do (.writeByte s (bit-or 2r10000000 len)) (pack-coll pairs s))
+
+              (<= len 0xffff)
+              (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s))
+
+              (<= len 0xffffffff)
+              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
