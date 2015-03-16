@@ -6,6 +6,13 @@
   [bytes]
   (map unchecked-byte bytes))
 
+(defn- byte-literals-array
+  [bytes]
+  (byte-array (byte-literals bytes)))
+
+(defn- fill [n c]
+  (clojure.string/join "" (repeat n c)))
+
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
          bytes# (byte-literals ~bytes)]
@@ -71,9 +78,6 @@
     (packable 2.5 [0xcb 0x40 0x04 0x00 0x00 0x00 0x00 0x00 0x00])
     (packable (Math/pow 10 35) [0xcb 0x47 0x33 0x42 0x61 0x72 0xc7 0x4d 0x82])))
 
-(defn- fill [n c]
-  (clojure.string/join "" (repeat n c)))
-
 (deftest str-test
   (testing "fixstr"
     (packable "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
@@ -95,3 +99,15 @@
   (testing "str 32"
     (packable (fill 65536 \b)
               (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
+
+(deftest bin-test
+  (testing "bin 8"
+    (packable (byte-array 0) [0xc4 0x00])
+    (packable (byte-literals-array [0x80]) [0xc4 0x01 0x80])
+    (packable (byte-literals-array (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
+    (packable (byte-literals-array (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
+  (testing "bin 16"
+    (packable (byte-literals-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+  (testing "bin 32"
+    (packable (byte-literals-array (repeat 65536 0x80))
+              (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
