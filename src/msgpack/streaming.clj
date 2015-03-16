@@ -75,6 +75,12 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
+  clojure.lang.Keyword
+  (pack-stream [kw s] (pack-stream (name kw) s))
+
+  clojure.lang.Symbol
+  (pack-stream [sym s] (pack-stream (name sym) s))
+
   Extended
   (pack-stream
     [e s]
@@ -117,7 +123,13 @@
               (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
+              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s))))
+
+  ; TODO: serialize set as a map with values equal to true (boolean)
+  ; If we deserialize a map with all values equal to true, then
+  ; automatically deserialize as a set.
+  clojure.lang.IPersistentSet
+  (pack-stream [set s] (pack-stream (sequence set) s)))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
