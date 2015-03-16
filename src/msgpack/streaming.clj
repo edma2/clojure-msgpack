@@ -86,7 +86,7 @@
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
-; Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
+; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
 
 ; Array of java.lang.Byte (boxed)
 (extend-type (class (java.lang.reflect.Array/newInstance Byte 0))
