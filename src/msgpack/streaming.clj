@@ -17,7 +17,7 @@
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
-(declare pack-number pack-bytes pack-float)
+(declare pack-number pack-bytes pack-float pack-coll)
 
 (extend-protocol Packable
   nil
@@ -92,7 +92,19 @@
          (<= len 0xffff) (do (.writeByte s 0xc8) (.writeShort s len))
          (<= len 0xffffffff) (do (.writeByte s 0xc9) (.writeInt s len)))
        (.writeByte s type)
-       (.write s data)))))
+       (.write s data))))
+
+  clojure.lang.Sequential
+  (pack-stream [coll s]
+    (cond-let [len (count coll)]
+      (<= len 0xf)
+      (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll coll s))
+
+      (<= len 0xffff)
+      (do (.writeByte s 0xdc) (.writeShort s len) (pack-coll coll s))
+
+      (<= len 0xffffffff)
+      (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll coll s)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
@@ -150,6 +162,10 @@
   (if (<= f Float/MAX_VALUE)
     (do (.writeByte s 0xca) (.writeFloat s f))
     (do (.writeByte s 0xcb) (.writeDouble s f))))
+
+(defn- pack-coll
+  [coll s]
+  (doseq [item coll] (pack-stream item s)))
 
 (defn pack [obj]
   (let [baos (ByteArrayOutputStream.)
