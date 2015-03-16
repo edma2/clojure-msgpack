@@ -8,6 +8,12 @@
   "Objects that can be serialized as MessagePack types"
   (pack-stream [this output-stream]))
 
+;; MessagePack allows applications to define application-specific types using
+;; the Extended type. Extended type consists of an integer and a byte array
+;; where the integer represents a kind of types and the byte array represents
+;; data.
+(defrecord Extended [type data])
+
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
@@ -83,7 +89,26 @@
               (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes)))))
+              (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
+
+  Extended
+  (pack-stream
+   [e s]
+   (let [type (:type e)
+         data (byte-array (:data e))
+         len (count data)]
+     (do
+       (cond
+         (= len 1) (.writeByte s 0xd4)
+         (= len 2) (.writeByte s 0xd5)
+         (= len 4) (.writeByte s 0xd6)
+         (= len 8) (.writeByte s 0xd7)
+         (= len 16) (.writeByte s 0xd8)
+         (<= len 0xff) (do (.writeByte s 0xc7) (.writeByte s len))
+         (<= len 0xffff) (do (.writeByte s 0xc8) (.writeShort s len))
+         (<= len 0xffffffff) (do (.writeByte s 0xc9) (.writeInt s len)))
+       (.writeByte s type)
+       (.write s data)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381

@@ -1,6 +1,6 @@
 (ns msgpack.streaming-test
   (:require [clojure.test :refer :all]
-            [msgpack.streaming :refer [pack]]))
+            [msgpack.streaming :refer [pack ->Extended]]))
 
 (defn- byte-literals
   [bytes]
@@ -12,6 +12,9 @@
 
 (defn- fill [n c]
   (clojure.string/join "" (repeat n c)))
+
+(defn- ext [type bytes]
+  (->Extended type (byte-literals bytes)))
 
 (defmacro packable [thing bytes]
   `(let [thing# ~thing
@@ -111,3 +114,29 @@
   (testing "bin 32"
     (packable (byte-literals-array (repeat 65536 0x80))
               (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
+
+(deftest ext-test
+  (testing "fixext 1"
+    (packable (ext 5 [0x80]) [0xd4 0x05 0x80]))
+  (testing "fixext 2"
+    (packable (ext 5 [0x80 0x80]) [0xd5 0x05 0x80 0x80]))
+  (testing "fixext 4"
+    (packable (ext 5 [0x80 0x80 0x80 0x80])
+              [0xd6 0x05 0x80 0x80 0x80 0x80]))
+  (testing "fixext 8"
+    (packable (ext 5 [0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80])
+              [0xd7 0x05 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80]))
+  (testing "fixext 16"
+    (packable (ext 5 (repeat 16 0x80))
+              (concat [0xd8 0x05] (repeat 16 0x80))))
+  (testing "ext 8"
+    (packable (ext 55 [0x1 0x3 0x11])
+              [0xc7 0x3 0x37 0x1 0x3 0x11])
+    (packable (ext 5 (repeat 255 0x80))
+              (concat [0xc7 0xff 0x05] (repeat 255 0x80))))
+  (testing "ext 16"
+    (packable (ext 5 (repeat 256 0x80))
+              (concat [0xc8 0x01 0x00 0x05] (repeat 256 0x80))))
+  (testing "ext 32"
+    (packable (ext 5 (repeat 65536 0x80))
+              (concat [0xc9 0x00 0x01 0x00 0x00 0x05] (repeat 65536 0x80)))))
