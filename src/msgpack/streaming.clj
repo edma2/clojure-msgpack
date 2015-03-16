@@ -85,12 +85,15 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes)))))
 
-; Note: not in extend-protocol above because of Clojure bug.
-; See http://dev.clojure.org/jira/browse/CLJ-1381
+; Note: the extensions below are not in extend-protocol above because of
+; Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
+
+; Array of java.lang.Byte (boxed)
 (extend-type (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
   (pack-stream [bytes s] (pack-bytes bytes s)))
 
+; Array of primitive bytes (un-boxed)
 (extend-type (Class/forName "[B")
   Packable
   (pack-stream [bytes s] (pack-bytes bytes s)))
