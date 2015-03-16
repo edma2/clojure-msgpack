@@ -17,7 +17,7 @@
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
-(declare pack-number pack-bytes)
+(declare pack-number pack-bytes pack-float)
 
 (extend-protocol Packable
   nil
@@ -33,41 +33,25 @@
       (.writeByte s 0xc2)))
 
   Byte
-  (pack-stream
-    [n s]
-    (pack-number n s))
+  (pack-stream [n s] (pack-number n s))
 
   Short
-  (pack-stream
-    [n s]
-    (pack-number n s))
+  (pack-stream [n s] (pack-number n s))
 
   Integer
-  (pack-stream
-    [n s]
-    (pack-number n s))
+  (pack-stream [n s] (pack-number n s))
 
   Long
-  (pack-stream
-    [n s]
-    (pack-number n s))
+  (pack-stream [n s] (pack-number n s))
 
   clojure.lang.BigInt
-  (pack-stream
-    [n s]
-    (pack-number n s))
-
-  ;; TODO floating point numbers should be size-optimized as above
+  (pack-stream [n s] (pack-number n s))
 
   Float
-  (pack-stream
-    [f s]
-    (do (.writeByte s 0xca) (.writeFloat s f)))
+  (pack-stream [f s] (pack-float f s))
 
   Double
-  (pack-stream
-    [d s]
-    (do (.writeByte s 0xcb) (.writeDouble s d)))
+  (pack-stream [d s] (pack-float d s))
 
   clojure.lang.Ratio
   (pack-stream
@@ -136,7 +120,7 @@
             (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
 
 (defn- pack-number
-  "Pack n using the most compact representation possible"
+  "Pack n using the most compact representation"
   [n s]
   (cond
     ; +fixnum
@@ -159,6 +143,13 @@
     (<= -0x80000000 n -1)         (do (.writeByte s 0xd2) (.writeInt s n))
     ; int 64
     (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
+
+(defn- pack-float
+  "Pack f using the most compact representation"
+  [f s]
+  (if (<= f Float/MAX_VALUE)
+    (do (.writeByte s 0xca) (.writeFloat s f))
+    (do (.writeByte s 0xcb) (.writeDouble s f))))
 
 (defn pack [obj]
   (let [baos (ByteArrayOutputStream.)
