@@ -202,11 +202,15 @@
       (pack-stream obj dos)
       (seq (.toByteArray baos)))))
 
-(defn unpack-stream [stream]
-  (cond-let [byte (.readUnsignedByte stream)]
+(defn unpack-stream [data-input]
+  (cond-let [byte (.readUnsignedByte data-input)]
             (= byte 0xc0) nil))
 
-(defn unpack [bytes]
-  (let [input-stream (ByteArrayInputStream. (byte-array bytes))
-        data-input (DataInputStream. input-stream)]
-    (unpack-stream data-input)))
+(defn unpack
+  "Unpack bytes as MessagePack object."
+  [bytes]
+  (-> bytes
+      byte-array
+      ByteArrayInputStream.
+      DataInputStream.
+      unpack-stream))
