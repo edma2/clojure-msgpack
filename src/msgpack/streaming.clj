@@ -208,7 +208,9 @@
             (= ubyte 0xc0) nil
             (= ubyte 0xc2) false
             (= ubyte 0xc3) true
-            (<= -32 sbyte 127) sbyte))
+            (<= -32 sbyte 127) sbyte
+            (= ubyte 0xcc) (.readUnsignedByte data-input)
+            (= ubyte 0xcd) (.readUnsignedShort data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
