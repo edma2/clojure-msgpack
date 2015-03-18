@@ -203,10 +203,12 @@
       (seq (.toByteArray output-stream)))))
 
 (defn unpack-stream [data-input]
-  (cond-let [byte (.readUnsignedByte data-input)]
-            (= byte 0xc0) nil
-            (= byte 0xc2) false
-            (= byte 0xc3) true))
+  (cond-let [ubyte (.readUnsignedByte data-input)
+             sbyte (unchecked-byte ubyte)]
+            (= ubyte 0xc0) nil
+            (= ubyte 0xc2) false
+            (= ubyte 0xc3) true
+            (<= -32 sbyte 127) sbyte))
 
 (defn unpack
   "Unpack bytes as MessagePack object."

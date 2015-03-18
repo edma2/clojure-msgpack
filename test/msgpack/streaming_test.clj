@@ -39,13 +39,13 @@
 
 (deftest int-test
   (testing "positive fixnum"
-    (packable 0 [0x00])
-    (packable 0x10 [0x10])
-    (packable 0x7f [0x7f]))
+    (round-trip 0 [0x00])
+    (round-trip 0x10 [0x10])
+    (round-trip 0x7f [0x7f]))
   (testing "negative fixnum"
-    (packable -1 [0xff])
-    (packable -16 [0xf0])
-    (packable -32 [0xe0]))
+    (round-trip -1 [0xff])
+    (round-trip -16 [0xf0])
+    (round-trip -32 [0xe0]))
   (testing "uint 8"
     (packable 0x80 [0xcc 0x80])
     (packable 0xf0 [0xcc 0xf0])
