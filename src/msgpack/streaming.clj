@@ -2,6 +2,8 @@
   (:require [msgpack.io :refer :all])
   (:import java.io.DataOutputStream
            java.io.ByteArrayOutputStream
+           java.io.DataInputStream
+           java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
 (defprotocol Packable
@@ -199,3 +201,12 @@
     (do
       (pack-stream obj dos)
       (seq (.toByteArray baos)))))
+
+(defn unpack-stream [stream]
+  (cond-let [byte (.readUnsignedByte stream)]
+            (= byte 0xc0) nil))
+
+(defn unpack [bytes]
+  (let [input-stream (ByteArrayInputStream. (byte-array bytes))
+        data-input (DataInputStream. input-stream)]
+    (unpack-stream data-input)))

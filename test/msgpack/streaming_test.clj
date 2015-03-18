@@ -1,6 +1,6 @@
 (ns msgpack.streaming-test
   (:require [clojure.test :refer :all]
-            [msgpack.streaming :refer [pack ->Extended]]))
+            [msgpack.streaming :refer [pack unpack ->Extended]]))
 
 (defn- byte-literals
   [bytes]
@@ -21,9 +21,16 @@
          bytes# (byte-literals ~bytes)]
      (is (= bytes# (pack thing#)))))
 
+(defmacro round-trip [thing bytes]
+  `(let [thing# ~thing
+         bytes# (byte-literals ~bytes)]
+     (is (= bytes# (pack thing#)))
+     (is (= thing# (unpack bytes#)))
+     (is (= thing# (unpack (pack thing#))))))
+
 (deftest nil-test
   (testing "nil"
-    (packable nil [0xc0])))
+    (round-trip nil [0xc0])))
 
 (deftest boolean-test
   (testing "booleans"
