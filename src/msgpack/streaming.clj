@@ -202,9 +202,24 @@
       (pack-stream obj data-output)
       (seq (.toByteArray output-stream)))))
 
-(defn- read-unsigned-int
+(defn- read-uint8
+  [data-input]
+  (.readUnsignedByte data-input))
+
+(defn- read-uint16
+  [data-input]
+  (.readUnsignedShort data-input))
+
+(defn- read-uint32
   [data-input]
   (bit-and 0xffffffff (.readInt data-input)))
+
+(defn- read-uint64
+  [data-input]
+  (let [n (.readLong data-input)]
+    (if (<= 0 n Long/MAX_VALUE)
+      n
+      (.and (biginteger n) (biginteger 0xffffffffffffffff)))))
 
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
@@ -213,9 +228,10 @@
             (= ubyte 0xc2) false
             (= ubyte 0xc3) true
             (<= -32 sbyte 127) sbyte
-            (= ubyte 0xcc) (.readUnsignedByte data-input)
-            (= ubyte 0xcd) (.readUnsignedShort data-input)
-            (= ubyte 0xce) (read-unsigned-int data-input)))
+            (= ubyte 0xcc) (read-uint8 data-input)
+            (= ubyte 0xcd) (read-uint16 data-input)
+            (= ubyte 0xce) (read-uint32 data-input)
+            (= ubyte 0xcf) (read-uint64 data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
