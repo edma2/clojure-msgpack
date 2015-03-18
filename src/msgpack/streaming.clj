@@ -8,7 +8,7 @@
 
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
-  (pack-stream [this output-stream]))
+  (pack-stream [this data-output]))
 
 ;; MessagePack allows applications to define application-specific types using
 ;; the Extended type. Extended type consists of an integer and a byte array
@@ -196,11 +196,11 @@
   (doseq [item coll] (pack-stream item s)))
 
 (defn pack [obj]
-  (let [baos (ByteArrayOutputStream.)
-        dos (DataOutputStream. baos)]
+  (let [output-stream (ByteArrayOutputStream.)
+        data-output (DataOutputStream. output-stream)]
     (do
-      (pack-stream obj dos)
-      (seq (.toByteArray baos)))))
+      (pack-stream obj data-output)
+      (seq (.toByteArray output-stream)))))
 
 (defn unpack-stream [data-input]
   (cond-let [byte (.readUnsignedByte data-input)]
