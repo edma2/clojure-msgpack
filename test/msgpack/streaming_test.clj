@@ -34,8 +34,8 @@
 
 (deftest boolean-test
   (testing "booleans"
-    (packable false [0xc2])
-    (packable true [0xc3])))
+    (round-trip false [0xc2])
+    (round-trip true [0xc3])))
 
 (deftest int-test
   (testing "positive fixnum"
