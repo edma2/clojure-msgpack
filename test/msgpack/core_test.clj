@@ -1,8 +1,8 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
-            [msgpack.core :refer [pack unpack ->Extended defext]]))
+            [msgpack.core :refer [pack unpack ->Extended]]))
 
-(defn- byte-literals
+(defn byte-literals
   [bytes]
   (map unchecked-byte bytes))
 
@@ -190,11 +190,3 @@
     (round-trip (zipmap (range 0 16) (repeat 16 5))
                 (concat [0xde 0x00 0x10]
                         (interleave (range 0 16) (repeat 16 5))))))
-
-(defrecord Employee [name])
-(defext Employee 5 #(.getBytes (:name %)))
-
-(deftest defext-test
-  (testing "defext"
-    (one-way (Employee. "bob") [0xc7 0x3 0x5 0x62 0x6f 0x62])
-    (is (= (->Extended 5 (byte-literals [0x62 0x6f 0x62])) (unpack (pack (Employee. "bob")))))))
