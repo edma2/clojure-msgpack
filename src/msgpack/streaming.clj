@@ -231,9 +231,14 @@
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
              sbyte (unchecked-byte ubyte)]
+            ; nil format family
             (= ubyte 0xc0) nil
+
+            ; bool format family
             (= ubyte 0xc2) false
             (= ubyte 0xc3) true
+
+            ; int format family
             (<= -32 sbyte 127) sbyte
             (= ubyte 0xcc) (read-uint8 data-input)
             (= ubyte 0xcd) (read-uint16 data-input)
@@ -246,6 +251,7 @@
             (= ubyte 0xca) (.readFloat data-input)
             (= ubyte 0xcb) (.readDouble data-input)
 
+            ; str format family
             (= (bit-and 2r11100000 ubyte) 2r10100000)
             (let [n (bit-and 2r11111 ubyte)]
               (String. (read-bytes n data-input)))
