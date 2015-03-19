@@ -1,5 +1,4 @@
 (ns msgpack.streaming
-  (:require [msgpack.io :refer :all])
   (:import java.io.DataOutputStream
            java.io.ByteArrayOutputStream
            java.io.DataInputStream
