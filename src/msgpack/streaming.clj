@@ -234,6 +234,9 @@
 (defn- unpack-n [n data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))
 
+(defn- unpack-map [n data-input]
+  (apply hash-map (unpack-n (* 2 n) data-input)))
+
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
              sbyte (unchecked-byte ubyte)]
@@ -295,7 +298,15 @@
             (= ubyte 0xdc)
             (unpack-n (read-uint16 data-input) data-input)
             (= ubyte 0xdd)
-            (unpack-n (read-uint32 data-input) data-input)))
+            (unpack-n (read-uint32 data-input) data-input)
+
+            ; map format family
+            (= (bit-and 2r11110000 ubyte) 2r10000000)
+            (unpack-map (bit-and 2r1111 ubyte) data-input)
+            (= ubyte 0xde)
+            (unpack-map (read-uint16 data-input) data-input)
+            (= ubyte 0xdf)
+            (unpack-map (read-uint32 data-input) data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
