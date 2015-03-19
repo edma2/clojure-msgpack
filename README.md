@@ -10,7 +10,7 @@ See https://clojars.org/clojure-msgpack
 
 ## Usage
 
-### basic:
+### Basic:
 ```clojure
 user=> (require '[msgpack.core :refer :all])
 nil
@@ -22,9 +22,9 @@ user=> (unpack (pack {:compact true :schema 0}))
 {"schema" 0, "compact" true}
 `````
 
-### advanced: TODO
+### Advanced: TODO
 
-### user-defined extensions:
+### User-defined extensions:
 ```clojure
 user=> (require '[msgpack.macros :refer [defext]])
 nil
