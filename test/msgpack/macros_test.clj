@@ -6,7 +6,7 @@
 
 (defrecord Employee [name])
 
-(defext Employee 5 #(.getBytes (:name %)))
+(defext Employee 5 #(.getBytes ^String (:name %)))
 
 (deftest defext-test
   (testing "defext"

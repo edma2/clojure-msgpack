@@ -19,7 +19,7 @@
   `(let ~bindings (cond ~@clauses)))
 
 (defn- pack-bytes
-  [bytes s]
+  [^bytes bytes ^java.io.DataOutput s]
   (cond-let [len (count bytes)]
             (<= len 0xff)
             (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
@@ -32,7 +32,7 @@
 
 (defn- pack-number
   "Pack n using the most compact representation"
-  [n s]
+  [n ^java.io.DataOutput s]
   (cond
     ; +fixnum
     (<= 0 n 127)                  (.writeByte s n)
@@ -43,9 +43,9 @@
     ; uint 16
     (<= 0 n 0xffff)               (do (.writeByte s 0xcd) (.writeShort s n))
     ; uint 32
-    (<= 0 n 0xffffffff)           (do (.writeByte s 0xce) (.writeInt s n))
+    (<= 0 n 0xffffffff)           (do (.writeByte s 0xce) (.writeInt s (unchecked-int n)))
     ; uint 64
-    (<= 0 n 0xffffffffffffffff)   (do (.writeByte s 0xcf) (.writeLong s n))
+    (<= 0 n 0xffffffffffffffff)   (do (.writeByte s 0xcf) (.writeLong s (unchecked-long n)))
     ; int 8
     (<= -0x80 n -1)               (do (.writeByte s 0xd0) (.writeByte s n))
     ; int 16
@@ -57,57 +57,57 @@
 
 (defn- pack-float
   "Pack f using the most compact representation"
-  [f s]
+  [f ^java.io.DataOutput s]
   (if (<= f Float/MAX_VALUE)
     (do (.writeByte s 0xca) (.writeFloat s f))
     (do (.writeByte s 0xcb) (.writeDouble s f))))
 
 (defn- pack-coll
-  [coll s]
+  [coll ^java.io.DataOutput s]
   (doseq [item coll] (pack-stream item s)))
 
 (extend-protocol Packable
   nil
   (pack-stream
-    [_ s]
+    [_ ^java.io.DataOutput s]
     (.writeByte s 0xc0))
 
   Boolean
   (pack-stream
-    [bool s]
+    [bool ^java.io.DataOutput s]
     (if bool
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
   Byte
-  (pack-stream [n s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   Short
-  (pack-stream [n s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   Integer
-  (pack-stream [n s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   Long
-  (pack-stream [n s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   clojure.lang.BigInt
-  (pack-stream [n s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   Float
-  (pack-stream [f s] (pack-float f s))
+  (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
 
   Double
-  (pack-stream [d s] (pack-float d s))
+  (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
 
   clojure.lang.Ratio
   (pack-stream
-    [r s]
+    [r ^java.io.DataOutput s]
     (pack-stream (double r) s))
 
   String
   (pack-stream
-    [str s]
+    [str ^java.io.DataOutput s]
     (cond-let [bytes (.getBytes str (Charset/forName "UTF-8"))
                len (count bytes)]
               (<= len 0x1f)
@@ -123,14 +123,14 @@
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
   clojure.lang.Keyword
-  (pack-stream [kw s] (pack-stream (name kw) s))
+  (pack-stream [kw ^java.io.DataOutput s] (pack-stream (name kw) s))
 
   clojure.lang.Symbol
-  (pack-stream [sym s] (pack-stream (name sym) s))
+  (pack-stream [sym ^java.io.DataOutput s] (pack-stream (name sym) s))
 
   Extended
   (pack-stream
-    [e s]
+    [e ^java.io.DataOutput s]
     (let [type (:type e)
           data (byte-array (:data e))
           len (count data)]
@@ -148,7 +148,7 @@
         (.write s data))))
 
   clojure.lang.Sequential
-  (pack-stream [seq s]
+  (pack-stream [seq ^java.io.DataOutput s]
     (cond-let [len (count seq)]
               (<= len 0xf)
               (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll seq s))
@@ -160,7 +160,7 @@
               (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s))))
 
   clojure.lang.IPersistentMap
-  (pack-stream [map s]
+  (pack-stream [map ^java.io.DataOutput s]
     (cond-let [len (count map)
                pairs (interleave (keys map) (vals map))]
               (<= len 0xf)
@@ -173,7 +173,7 @@
               (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s))))
 
   clojure.lang.IPersistentSet
-  (pack-stream [set s] (pack-stream (sequence set) s)))
+  (pack-stream [set ^java.io.DataOutput s] (pack-stream (sequence set) s)))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
@@ -181,12 +181,12 @@
 ; Array of java.lang.Byte (boxed)
 (extend-type (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
-  (pack-stream [bytes s] (pack-bytes bytes s)))
+  (pack-stream [bytes ^java.io.DataOutput s] (pack-bytes bytes s)))
 
 ; Array of primitive bytes (un-boxed)
 (extend-type (Class/forName "[B")
   Packable
-  (pack-stream [bytes s] (pack-bytes bytes s)))
+  (pack-stream [bytes ^java.io.DataOutput s] (pack-bytes bytes s)))
 
 (defn pack [obj]
   (let [output-stream (ByteArrayOutputStream.)
@@ -196,43 +196,43 @@
       (seq (.toByteArray output-stream)))))
 
 (defn- read-uint8
-  [data-input]
+  [^java.io.DataInput data-input]
   (.readUnsignedByte data-input))
 
 (defn- read-uint16
-  [data-input]
+  [^java.io.DataInput data-input]
   (.readUnsignedShort data-input))
 
 (defn- read-uint32
-  [data-input]
+  [^java.io.DataInput data-input]
   (bit-and 0xffffffff (.readInt data-input)))
 
 (defn- read-uint64
-  [data-input]
+  [^java.io.DataInput data-input]
   (let [n (.readLong data-input)]
     (if (<= 0 n Long/MAX_VALUE)
       n
       (.and (biginteger n) (biginteger 0xffffffffffffffff)))))
 
 (defn- read-bytes
-  [n data-input]
+  [n ^java.io.DataInput data-input]
   (let [bytes (byte-array n)]
     (do
       (.readFully data-input bytes)
       bytes)))
 
-(defn- unpack-extended [n data-input]
+(defn- unpack-extended [n ^java.io.DataInput data-input]
   (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
 
 (declare unpack-stream)
 
-(defn- unpack-n [n data-input]
+(defn- unpack-n [n ^java.io.DataInput data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))
 
-(defn- unpack-map [n data-input]
+(defn- unpack-map [n ^java.io.DataInput data-input]
   (apply hash-map (unpack-n (* 2 n) data-input)))
 
-(defn unpack-stream [data-input]
+(defn unpack-stream [^java.io.DataInput data-input]
   (cond-let [byte (.readUnsignedByte data-input)]
             ; nil format family
             (= byte 0xc0) nil
@@ -262,16 +262,16 @@
             ; str format family
             (= (bit-and 2r11100000 byte) 2r10100000)
             (let [n (bit-and 2r11111 byte)]
-              (String. (read-bytes n data-input)))
+              (String. ^bytes (read-bytes n data-input)))
 
             (= byte 0xd9)
-            (String. (read-bytes (read-uint8 data-input) data-input))
+            (String. ^bytes (read-bytes (read-uint8 data-input) data-input))
 
             (= byte 0xda)
-            (String. (read-bytes (read-uint16 data-input) data-input))
+            (String. ^bytes (read-bytes (read-uint16 data-input) data-input))
 
             (= byte 0xdb)
-            (String. (read-bytes (read-uint32 data-input) data-input))
+            (String. ^bytes (read-bytes (read-uint32 data-input) data-input))
 
             ; bin format family
             (= byte 0xc4)
