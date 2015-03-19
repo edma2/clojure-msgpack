@@ -235,7 +235,9 @@
             (= ubyte 0xd0) (.readByte data-input)
             (= ubyte 0xd1) (.readShort data-input)
             (= ubyte 0xd2) (.readInt data-input)
-            (= ubyte 0xd3) (.readLong data-input)))
+            (= ubyte 0xd3) (.readLong data-input)
+            (= ubyte 0xca) (.readFloat data-input)
+            (= ubyte 0xcb) (.readDouble data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
