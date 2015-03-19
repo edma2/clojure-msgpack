@@ -236,74 +236,90 @@
   (apply hash-map (unpack-n (* 2 n) data-input)))
 
 (defn unpack-stream [data-input]
-  (cond-let [ubyte (.readUnsignedByte data-input)
-             sbyte (unchecked-byte ubyte)]
+  (cond-let [byte (.readUnsignedByte data-input)]
             ; nil format family
-            (= ubyte 0xc0) nil
+            (= byte 0xc0) nil
 
             ; bool format family
-            (= ubyte 0xc2) false
-            (= ubyte 0xc3) true
+            (= byte 0xc2) false
+            (= byte 0xc3) true
 
             ; int format family
-            (<= -32 sbyte 127) sbyte
-            (= ubyte 0xcc) (read-uint8 data-input)
-            (= ubyte 0xcd) (read-uint16 data-input)
-            (= ubyte 0xce) (read-uint32 data-input)
-            (= ubyte 0xcf) (read-uint64 data-input)
-            (= ubyte 0xd0) (.readByte data-input)
-            (= ubyte 0xd1) (.readShort data-input)
-            (= ubyte 0xd2) (.readInt data-input)
-            (= ubyte 0xd3) (.readLong data-input)
-            (= ubyte 0xca) (.readFloat data-input)
-            (= ubyte 0xcb) (.readDouble data-input)
+            (= (bit-and 2r11100000 byte) 2r11100000)
+            (unchecked-byte byte)
+
+            (= (bit-and 2r10000000 byte) 0)
+            (unchecked-byte byte)
+
+            (= byte 0xcc) (read-uint8 data-input)
+            (= byte 0xcd) (read-uint16 data-input)
+            (= byte 0xce) (read-uint32 data-input)
+            (= byte 0xcf) (read-uint64 data-input)
+            (= byte 0xd0) (.readByte data-input)
+            (= byte 0xd1) (.readShort data-input)
+            (= byte 0xd2) (.readInt data-input)
+            (= byte 0xd3) (.readLong data-input)
+            (= byte 0xca) (.readFloat data-input)
+            (= byte 0xcb) (.readDouble data-input)
 
             ; str format family
-            (= (bit-and 2r11100000 ubyte) 2r10100000)
-            (let [n (bit-and 2r11111 ubyte)]
+            (= (bit-and 2r11100000 byte) 2r10100000)
+            (let [n (bit-and 2r11111 byte)]
               (String. (read-bytes n data-input)))
-            (= ubyte 0xd9)
+
+            (= byte 0xd9)
             (String. (read-bytes (read-uint8 data-input) data-input))
-            (= ubyte 0xda)
+
+            (= byte 0xda)
             (String. (read-bytes (read-uint16 data-input) data-input))
-            (= ubyte 0xdb)
+
+            (= byte 0xdb)
             (String. (read-bytes (read-uint32 data-input) data-input))
 
             ; bin format family
-            (= ubyte 0xc4)
+            (= byte 0xc4)
             (read-bytes (read-uint8 data-input) data-input)
-            (= ubyte 0xc5)
+
+            (= byte 0xc5)
             (read-bytes (read-uint16 data-input) data-input)
-            (= ubyte 0xc6)
+
+            (= byte 0xc6)
             (read-bytes (read-uint32 data-input) data-input)
 
             ; ext format family
-            (= ubyte 0xd4) (read-extended 1 data-input)
-            (= ubyte 0xd5) (read-extended 2 data-input)
-            (= ubyte 0xd6) (read-extended 4 data-input)
-            (= ubyte 0xd7) (read-extended 8 data-input)
-            (= ubyte 0xd8) (read-extended 16 data-input)
-            (= ubyte 0xc7)
+            (= byte 0xd4) (read-extended 1 data-input)
+            (= byte 0xd5) (read-extended 2 data-input)
+            (= byte 0xd6) (read-extended 4 data-input)
+            (= byte 0xd7) (read-extended 8 data-input)
+            (= byte 0xd8) (read-extended 16 data-input)
+
+            (= byte 0xc7)
             (read-extended (read-uint8 data-input) data-input)
-            (= ubyte 0xc8)
+
+            (= byte 0xc8)
             (read-extended (read-uint16 data-input) data-input)
-            (= ubyte 0xc9)
+
+            (= byte 0xc9)
             (read-extended (read-uint32 data-input) data-input)
 
             ; array format family
-            (= (bit-and 2r11110000 ubyte) 2r10010000)
-            (unpack-n (bit-and 2r1111 ubyte) data-input)
-            (= ubyte 0xdc)
+            (= (bit-and 2r11110000 byte) 2r10010000)
+            (unpack-n (bit-and 2r1111 byte) data-input)
+
+            (= byte 0xdc)
             (unpack-n (read-uint16 data-input) data-input)
-            (= ubyte 0xdd)
+
+            (= byte 0xdd)
             (unpack-n (read-uint32 data-input) data-input)
 
             ; map format family
-            (= (bit-and 2r11110000 ubyte) 2r10000000)
-            (unpack-map (bit-and 2r1111 ubyte) data-input)
-            (= ubyte 0xde)
+            (= (bit-and 2r11110000 byte) 2r10000000)
+            (unpack-map (bit-and 2r1111 byte) data-input)
+
+            (= byte 0xde)
             (unpack-map (read-uint16 data-input) data-input)
-            (= ubyte 0xdf)
+
+            (= byte 0xdf)
             (unpack-map (read-uint32 data-input) data-input)))
 
 (defn unpack
