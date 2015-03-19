@@ -8,7 +8,6 @@ dependencies.
 ## Installation
 
 Get it from clojars: https://clojars.org/clojure-msgpack
-
 ![Clojars Project](http://clojars.org/clojure-msgpack/latest-version.svg)
 
 ## Usage
