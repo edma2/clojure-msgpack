@@ -57,6 +57,12 @@ user=> (let [bob (Employee. "Bob")
          (map #(format "0x%x" %) bytes))
 ("0xc7" "0x3" "0x1" "0x42" "0x6f" "0x62")
 ```
+
+## TODO:
+* Error checking
+* Compatibility mode
+* Benchmarks
+
 ## License
 
 clojure-msgpack is MIT licensed. See the included LICENSE file for more details.
