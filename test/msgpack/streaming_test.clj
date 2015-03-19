@@ -28,6 +28,13 @@
      (is (= thing# (unpack bytes#)))
      (is (= thing# (unpack (pack thing#))))))
 
+(defmacro byte-array-round-trip
+  [byte-array bytes]
+  `(let [byte-array# ~byte-array
+         bytes# (byte-literals ~bytes)]
+     (is (= bytes# (pack byte-array#)))
+     (is (= (seq byte-array#) (seq (unpack bytes#))))))
+
 (deftest nil-test
   (testing "nil"
     (round-trip nil [0xc0])))
@@ -113,15 +120,15 @@
 
 (deftest bin-test
   (testing "bin 8"
-    (one-way (byte-array 0) [0xc4 0x00])
-    (one-way (byte-array-literal [0x80]) [0xc4 0x01 0x80])
-    (one-way (byte-array-literal (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
-    (one-way (byte-array-literal (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
+    (byte-array-round-trip (byte-array 0) [0xc4 0x00])
+    (byte-array-round-trip (byte-array-literal [0x80]) [0xc4 0x01 0x80])
+    (byte-array-round-trip (byte-array-literal (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
+    (byte-array-round-trip (byte-array-literal (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
   (testing "bin 16"
-    (one-way (byte-array-literal (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+    (byte-array-round-trip (byte-array-literal (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
   (testing "bin 32"
-    (one-way (byte-array-literal (repeat 65536 0x80))
-             (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
+    (byte-array-round-trip (byte-array-literal (repeat 65536 0x80))
+                           (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
 
 (deftest ext-test
   (testing "fixext 1"

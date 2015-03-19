@@ -261,7 +261,15 @@
             (= ubyte 0xda)
             (String. (read-bytes (read-uint16 data-input) data-input))
             (= ubyte 0xdb)
-            (String. (read-bytes (read-uint32 data-input) data-input))))
+            (String. (read-bytes (read-uint32 data-input) data-input))
+
+            ; bin format family
+            (= ubyte 0xc4)
+            (read-bytes (read-uint8 data-input) data-input)
+            (= ubyte 0xc5)
+            (read-bytes (read-uint16 data-input) data-input)
+            (= ubyte 0xc6)
+            (read-bytes (read-uint32 data-input) data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
