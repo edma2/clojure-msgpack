@@ -66,8 +66,8 @@ user=> (let [bob (Employee. "Bob")
 ```
 
 ### Extras:
-Symbols and Keywords are treated as MessagePack strings.
-Sets are treated as MessagePack arrays.
+* Symbols and Keywords are treated as MessagePack strings.
+* Sets are treated as MessagePack arrays.
 
 ## TODO
 * Error checking
