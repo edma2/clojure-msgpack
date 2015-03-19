@@ -228,6 +228,9 @@
       (.readFully data-input bytes)
       bytes)))
 
+(defn- read-extended [n data-input]
+  (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
+
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
              sbyte (unchecked-byte ubyte)]
@@ -269,7 +272,20 @@
             (= ubyte 0xc5)
             (read-bytes (read-uint16 data-input) data-input)
             (= ubyte 0xc6)
-            (read-bytes (read-uint32 data-input) data-input)))
+            (read-bytes (read-uint32 data-input) data-input)
+
+            ; ext format family
+            (= ubyte 0xd4) (read-extended 1 data-input)
+            (= ubyte 0xd5) (read-extended 2 data-input)
+            (= ubyte 0xd6) (read-extended 4 data-input)
+            (= ubyte 0xd7) (read-extended 8 data-input)
+            (= ubyte 0xd8) (read-extended 16 data-input)
+            (= ubyte 0xc7)
+            (read-extended (read-uint8 data-input) data-input)
+            (= ubyte 0xc8)
+            (read-extended (read-uint16 data-input) data-input)
+            (= ubyte 0xc9)
+            (read-extended (read-uint32 data-input) data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
