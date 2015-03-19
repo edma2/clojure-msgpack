@@ -231,6 +231,9 @@
 (defn- read-extended [n data-input]
   (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
 
+(defn- unpack-n [n data-input]
+  (doall (for [_ (range n)] (unpack-stream data-input))))
+
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
              sbyte (unchecked-byte ubyte)]
@@ -258,7 +261,6 @@
             (= (bit-and 2r11100000 ubyte) 2r10100000)
             (let [n (bit-and 2r11111 ubyte)]
               (String. (read-bytes n data-input)))
-
             (= ubyte 0xd9)
             (String. (read-bytes (read-uint8 data-input) data-input))
             (= ubyte 0xda)
@@ -285,7 +287,15 @@
             (= ubyte 0xc8)
             (read-extended (read-uint16 data-input) data-input)
             (= ubyte 0xc9)
-            (read-extended (read-uint32 data-input) data-input)))
+            (read-extended (read-uint32 data-input) data-input)
+
+            ; array format family
+            (= (bit-and 2r11110000 ubyte) 2r10010000)
+            (unpack-n (bit-and 2r1111 ubyte) data-input)
+            (= ubyte 0xdc)
+            (unpack-n (read-uint16 data-input) data-input)
+            (= ubyte 0xdd)
+            (unpack-n (read-uint32 data-input) data-input)))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
