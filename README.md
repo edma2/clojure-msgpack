@@ -27,8 +27,8 @@ user=> (unpack (pack {:compact true :schema 0}))
 `````
 
 ### Streaming:
-* ```unpack-stream```: Takes a [java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html) as an argument. Usually you want to wrap this around some sort of [InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)
-* ```pack-stream```: Takes a [java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html) as an argument. Usually you want to wrap this around some sort of [OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
+* ```unpack-stream```: Takes a [java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html) as an argument. Usually you wrap this around an [InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)
+* ```pack-stream```: Takes a [java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html) as an argument. Usually you wrap this around an [OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
 ```clojure
 user=> (use 'clojure.java.io)
 nil
