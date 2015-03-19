@@ -1,6 +1,6 @@
 (ns msgpack.streaming-test
   (:require [clojure.test :refer :all]
-            [msgpack.streaming :refer [pack unpack ->Extended]]))
+            [msgpack.streaming :refer [pack unpack ->Extended defext]]))
 
 (defn- byte-literals
   [bytes]
@@ -190,3 +190,11 @@
     (round-trip (zipmap (range 0 16) (repeat 16 5))
                 (concat [0xde 0x00 0x10]
                         (interleave (range 0 16) (repeat 16 5))))))
+
+(defrecord Employee [name])
+(defext Employee 5 #(.getBytes (:name %)))
+
+(deftest defext-test
+  (testing "defext"
+    (one-way (Employee. "bob") [0xc7 0x3 0x5 0x62 0x6f 0x62])
+    (is (= (->Extended 5 (byte-literals [0x62 0x6f 0x62])) (unpack (pack (Employee. "bob")))))))
