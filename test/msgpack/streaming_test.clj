@@ -16,24 +16,24 @@
 (defn- ext [type bytes]
   (->Extended type (byte-literals bytes)))
 
-(defmacro one-way [obj bytes]
+(defmacro one-way [obj expected]
   `(let [obj# ~obj
-         bytes# (byte-literals ~bytes)]
-     (is (= bytes# (pack obj#)))))
+         expected# (byte-literals ~expected)]
+     (is (= expected# (pack obj#)))))
 
-(defmacro round-trip [obj bytes]
+(defmacro round-trip [obj expected]
   `(let [obj# ~obj
-         bytes# (byte-literals ~bytes)]
-     (is (= bytes# (pack obj#)))
-     (is (= obj# (unpack bytes#)))
+         expected# (byte-literals ~expected)]
+     (is (= expected# (pack obj#)))
+     (is (= obj# (unpack expected#)))
      (is (= obj# (unpack (pack obj#))))))
 
 (defmacro byte-array-round-trip
-  [byte-array bytes]
+  [byte-array expected]
   `(let [byte-array# ~byte-array
-         bytes# (byte-literals ~bytes)]
-     (is (= bytes# (pack byte-array#)))
-     (is (= (seq byte-array#) (seq (unpack bytes#))))))
+         expected# (byte-literals ~expected)]
+     (is (= expected# (pack byte-array#)))
+     (is (= (seq byte-array#) (seq (unpack expected#))))))
 
 (deftest nil-test
   (testing "nil"
