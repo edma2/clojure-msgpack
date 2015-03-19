@@ -224,6 +224,8 @@
 (defn- read-extended [n data-input]
   (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
 
+(declare unpack-stream)
+
 (defn- unpack-n [n data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))
 
