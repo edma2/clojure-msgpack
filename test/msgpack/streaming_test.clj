@@ -16,17 +16,17 @@
 (defn- ext [type bytes]
   (->Extended type (byte-literals bytes)))
 
-(defmacro one-way [thing bytes]
-  `(let [thing# ~thing
+(defmacro one-way [obj bytes]
+  `(let [obj# ~obj
          bytes# (byte-literals ~bytes)]
-     (is (= bytes# (pack thing#)))))
+     (is (= bytes# (pack obj#)))))
 
-(defmacro round-trip [thing bytes]
-  `(let [thing# ~thing
+(defmacro round-trip [obj bytes]
+  `(let [obj# ~obj
          bytes# (byte-literals ~bytes)]
-     (is (= bytes# (pack thing#)))
-     (is (= thing# (unpack bytes#)))
-     (is (= thing# (unpack (pack thing#))))))
+     (is (= bytes# (pack obj#)))
+     (is (= obj# (unpack bytes#)))
+     (is (= obj# (unpack (pack obj#))))))
 
 (defmacro byte-array-round-trip
   [byte-array bytes]
