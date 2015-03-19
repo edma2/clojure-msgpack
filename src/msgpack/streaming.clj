@@ -160,7 +160,6 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s))))
 
-  ; TODO: try to deserialize keys as keywords
   clojure.lang.IPersistentMap
   (pack-stream [map s]
     (cond-let [len (count map)
@@ -174,9 +173,6 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s))))
 
-  ; TODO: serialize set as a map with values equal to true (boolean)
-  ; If we deserialize a map with all values equal to true, then
-  ; automatically deserialize as a set.
   clojure.lang.IPersistentSet
   (pack-stream [set s] (pack-stream (sequence set) s)))
 
