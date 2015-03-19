@@ -13,6 +13,8 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 ## Usage
 
 ### Basic:
+* ```pack```: Serialize object as a sequence of java.lang.Bytes.
+* ```unpack``` Deserialize bytes as a Clojure object.
 ```clojure
 user=> (require '[msgpack.core :refer :all])
 nil
@@ -25,6 +27,8 @@ user=> (unpack (pack {:compact true :schema 0}))
 `````
 
 ### Streaming:
+* ```unpack-stream```: Takes a [java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html) as an argument. Usually you want to wrap this around some sort of [InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)
+* ```pack-stream```: Takes a [java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html) as an argument. Usually you want to wrap this around some sort of [OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
 ```clojure
 user=> (use 'clojure.java.io)
 nil
@@ -44,6 +48,7 @@ user=> (with-open [i (input-stream "test.dat")]
 ```
 
 ### User-defined extensions:
+A macro ```defext``` is provided to allow serialization of application-specific types. Currently this only works one-way; data serialized this way will always deserialize as a raw ```Extended``` type.
 ```clojure
 user=> (require '[msgpack.macros :refer [defext]])
 nil
@@ -60,7 +65,11 @@ user=> (let [bob (Employee. "Bob")
 ("0xc7" "0x3" "0x1" "0x42" "0x6f" "0x62")
 ```
 
-## TODO:
+### Extras:
+Symbols and Keywords are treated as MessagePack strings.
+Sets are treated as MessagePack arrays.
+
+## TODO
 * Error checking
 * Compatibility mode
 * Benchmarks
