@@ -89,27 +89,27 @@
 
 (deftest str-test
   (testing "fixstr"
-    (one-way "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
-    (one-way "" [0xa0])
-    (one-way "abc" [0xa3 0x61 0x62 0x63])
+    (round-trip "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
+    (round-trip "" [0xa0])
+    (round-trip "abc" [0xa3 0x61 0x62 0x63])
     (one-way 'abc [0xa3 0x61 0x62 0x63])
     (one-way :abc [0xa3 0x61 0x62 0x63])
-    (one-way (fill 31 \a) (cons 0xbf (repeat 31 0x61))))
+    (round-trip (fill 31 \a) (cons 0xbf (repeat 31 0x61))))
   (testing "str 8"
-    (one-way (fill 32 \b)
-             (concat [0xd9 0x20] (repeat 32 (byte \b))))
-    (one-way (fill 100 \c)
-             (concat [0xd9 0x64] (repeat 100 (byte \c))))
-    (one-way (fill 255 \d)
-             (concat [0xd9 0xff] (repeat 255 (byte \d)))))
+    (round-trip (fill 32 \b)
+                (concat [0xd9 0x20] (repeat 32 (byte \b))))
+    (round-trip (fill 100 \c)
+                (concat [0xd9 0x64] (repeat 100 (byte \c))))
+    (round-trip (fill 255 \d)
+                (concat [0xd9 0xff] (repeat 255 (byte \d)))))
   (testing "str 16"
-    (one-way (fill 256 \b)
-             (concat [0xda 0x01 0x00] (repeat 256 (byte \b))))
-    (one-way (fill 65535 \c)
-             (concat [0xda 0xff 0xff] (repeat 65535 (byte \c)))))
+    (round-trip (fill 256 \b)
+                (concat [0xda 0x01 0x00] (repeat 256 (byte \b))))
+    (round-trip (fill 65535 \c)
+                (concat [0xda 0xff 0xff] (repeat 65535 (byte \c)))))
   (testing "str 32"
-    (one-way (fill 65536 \b)
-             (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
+    (round-trip (fill 65536 \b)
+                (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
 
 (deftest bin-test
   (testing "bin 8"

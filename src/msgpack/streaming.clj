@@ -221,6 +221,13 @@
       n
       (.and (biginteger n) (biginteger 0xffffffffffffffff)))))
 
+(defn- read-bytes
+  [n data-input]
+  (let [bytes (byte-array n)]
+    (do
+      (.readFully data-input bytes)
+      bytes)))
+
 (defn unpack-stream [data-input]
   (cond-let [ubyte (.readUnsignedByte data-input)
              sbyte (unchecked-byte ubyte)]
@@ -237,7 +244,18 @@
             (= ubyte 0xd2) (.readInt data-input)
             (= ubyte 0xd3) (.readLong data-input)
             (= ubyte 0xca) (.readFloat data-input)
-            (= ubyte 0xcb) (.readDouble data-input)))
+            (= ubyte 0xcb) (.readDouble data-input)
+
+            (= (bit-and 2r11100000 ubyte) 2r10100000)
+            (let [n (bit-and 2r11111 ubyte)]
+              (String. (read-bytes n data-input)))
+
+            (= ubyte 0xd9)
+            (String. (read-bytes (read-uint8 data-input) data-input))
+            (= ubyte 0xda)
+            (String. (read-bytes (read-uint16 data-input) data-input))
+            (= ubyte 0xdb)
+            (String. (read-bytes (read-uint32 data-input) data-input))))
 
 (defn unpack
   "Unpack bytes as MessagePack object."
