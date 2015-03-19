@@ -1,5 +1,5 @@
 (ns msgpack.macros
-  (require [msgpack.core :refer :all]))
+  (:require [msgpack.core :refer :all]))
 
 (defmacro defext
   "Treat an existing class as a MessagePack extended type.
