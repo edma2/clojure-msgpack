@@ -1,12 +1,13 @@
 # clojure-msgpack
 
-clojure-msgpack is a library for
-* serializing native Clojure data structures as MessagePack byte arrays.
-* deserializing MessagePack byte arrays into native Clojure data structures.
+clojure-msgpack is a lightweight and simple library for converting
+between native Clojure data structures and MessagePack byte formats.
+clojure-msgpack only depends on Clojure itself; it has zero third-party
+dependencies.
 
 ## Installation
 
-See https://clojars.org/clojure-msgpack
+Get it from clojars: https://clojars.org/clojure-msgpack
 
 ## Usage
 
