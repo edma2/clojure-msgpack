@@ -4,4 +4,5 @@
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [reiddraper/simple-check "0.5.3"]])
+                 [reiddraper/simple-check "0.5.3"]]
+  :global-vars {*warn-on-reflection* true})
