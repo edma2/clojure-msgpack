@@ -22,7 +22,24 @@ user=> (unpack (pack {:compact true :schema 0}))
 {"schema" 0, "compact" true}
 `````
 
-### Advanced: TODO
+### Streaming:
+```clojure
+user=> (use 'clojure.java.io)
+nil
+
+user=> (import '(java.io.DataOutputStream) '(java.io.DataInputStream))
+nil
+
+user=> (with-open [o (output-stream "test.dat")]
+  (let [data-output (DataOutputStream. o)]
+    (pack-stream {:compact true :schema 0} data-output)))
+nil
+
+user=> (with-open [i (input-stream "test.dat")]
+  (let [data-input (DataInputStream. i)]
+    (unpack-stream data-input)))
+{"schema" 0, "compact" true}
+```
 
 ### User-defined extensions:
 ```clojure
