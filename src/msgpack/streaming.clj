@@ -221,7 +221,7 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defn- read-extended [n data-input]
+(defn- unpack-extended [n data-input]
   (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
 
 (declare unpack-stream)
@@ -284,20 +284,20 @@
             (read-bytes (read-uint32 data-input) data-input)
 
             ; ext format family
-            (= byte 0xd4) (read-extended 1 data-input)
-            (= byte 0xd5) (read-extended 2 data-input)
-            (= byte 0xd6) (read-extended 4 data-input)
-            (= byte 0xd7) (read-extended 8 data-input)
-            (= byte 0xd8) (read-extended 16 data-input)
+            (= byte 0xd4) (unpack-extended 1 data-input)
+            (= byte 0xd5) (unpack-extended 2 data-input)
+            (= byte 0xd6) (unpack-extended 4 data-input)
+            (= byte 0xd7) (unpack-extended 8 data-input)
+            (= byte 0xd8) (unpack-extended 16 data-input)
 
             (= byte 0xc7)
-            (read-extended (read-uint8 data-input) data-input)
+            (unpack-extended (read-uint8 data-input) data-input)
 
             (= byte 0xc8)
-            (read-extended (read-uint16 data-input) data-input)
+            (unpack-extended (read-uint16 data-input) data-input)
 
             (= byte 0xc9)
-            (read-extended (read-uint32 data-input) data-input)
+            (unpack-extended (read-uint32 data-input) data-input)
 
             ; array format family
             (= (bit-and 2r11110000 byte) 2r10010000)
