@@ -19,7 +19,53 @@
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
-(declare pack-number pack-bytes pack-float pack-coll)
+(defn- pack-bytes
+  [bytes s]
+  (cond-let [len (count bytes)]
+            (<= len 0xff)
+            (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
+
+            (<= len 0xffff)
+            (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
+
+            (<= len 0xffffffff)
+            (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
+
+(defn- pack-number
+  "Pack n using the most compact representation"
+  [n s]
+  (cond
+    ; +fixnum
+    (<= 0 n 127)                  (.writeByte s n)
+    ; -fixnum
+    (<= -32 n -1)                 (.writeByte s n)
+    ; uint 8
+    (<= 0 n 0xff)                 (do (.writeByte s 0xcc) (.writeByte s n))
+    ; uint 16
+    (<= 0 n 0xffff)               (do (.writeByte s 0xcd) (.writeShort s n))
+    ; uint 32
+    (<= 0 n 0xffffffff)           (do (.writeByte s 0xce) (.writeInt s n))
+    ; uint 64
+    (<= 0 n 0xffffffffffffffff)   (do (.writeByte s 0xcf) (.writeLong s n))
+    ; int 8
+    (<= -0x80 n -1)               (do (.writeByte s 0xd0) (.writeByte s n))
+    ; int 16
+    (<= -0x8000 n -1)             (do (.writeByte s 0xd1) (.writeShort s n))
+    ; int 32
+    (<= -0x80000000 n -1)         (do (.writeByte s 0xd2) (.writeInt s n))
+    ; int 64
+    (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
+
+(defn- pack-float
+  "Pack f using the most compact representation"
+  [f s]
+  (if (<= f Float/MAX_VALUE)
+    (do (.writeByte s 0xca) (.writeFloat s f))
+    (do (.writeByte s 0xcb) (.writeDouble s f))))
+
+(defn- pack-coll
+  [coll s]
+  (doseq [item coll] (pack-stream item s)))
 
 (extend-protocol Packable
   nil
@@ -146,54 +192,6 @@
 (extend-type (Class/forName "[B")
   Packable
   (pack-stream [bytes s] (pack-bytes bytes s)))
-
-(defn- pack-bytes
-  [bytes s]
-  (cond-let [len (count bytes)]
-            (<= len 0xff)
-            (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
-
-            (<= len 0xffff)
-            (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
-
-            (<= len 0xffffffff)
-            (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
-
-(defn- pack-number
-  "Pack n using the most compact representation"
-  [n s]
-  (cond
-    ; +fixnum
-    (<= 0 n 127)                  (.writeByte s n)
-    ; -fixnum
-    (<= -32 n -1)                 (.writeByte s n)
-    ; uint 8
-    (<= 0 n 0xff)                 (do (.writeByte s 0xcc) (.writeByte s n))
-    ; uint 16
-    (<= 0 n 0xffff)               (do (.writeByte s 0xcd) (.writeShort s n))
-    ; uint 32
-    (<= 0 n 0xffffffff)           (do (.writeByte s 0xce) (.writeInt s n))
-    ; uint 64
-    (<= 0 n 0xffffffffffffffff)   (do (.writeByte s 0xcf) (.writeLong s n))
-    ; int 8
-    (<= -0x80 n -1)               (do (.writeByte s 0xd0) (.writeByte s n))
-    ; int 16
-    (<= -0x8000 n -1)             (do (.writeByte s 0xd1) (.writeShort s n))
-    ; int 32
-    (<= -0x80000000 n -1)         (do (.writeByte s 0xd2) (.writeInt s n))
-    ; int 64
-    (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
-
-(defn- pack-float
-  "Pack f using the most compact representation"
-  [f s]
-  (if (<= f Float/MAX_VALUE)
-    (do (.writeByte s 0xca) (.writeFloat s f))
-    (do (.writeByte s 0xcb) (.writeDouble s f))))
-
-(defn- pack-coll
-  [coll s]
-  (doseq [item coll] (pack-stream item s)))
 
 (defn pack [obj]
   (let [output-stream (ByteArrayOutputStream.)
