@@ -33,6 +33,7 @@
   `(let [byte-array# ~byte-array
          expected# (byte-literals ~expected)]
      (is (= expected# (pack byte-array#)))
+     (is (= (Class/forName "[B") (class (unpack expected#))))
      (is (= (seq byte-array#) (seq (unpack expected#))))))
 
 (deftest nil-test
