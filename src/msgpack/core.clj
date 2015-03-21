@@ -122,6 +122,9 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
+  Character
+  (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
+
   clojure.lang.Keyword
   (pack-stream [kw ^java.io.DataOutput s] (pack-stream (name kw) s))
 
