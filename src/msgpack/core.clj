@@ -259,6 +259,8 @@
             (= byte 0xd1) (.readShort data-input)
             (= byte 0xd2) (.readInt data-input)
             (= byte 0xd3) (.readLong data-input)
+
+            ; float format family
             (= byte 0xca) (.readFloat data-input)
             (= byte 0xcb) (.readDouble data-input)
 
