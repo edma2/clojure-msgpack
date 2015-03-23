@@ -11,4 +11,5 @@
 (deftest defext-test
   (testing "defext"
     (one-way (Employee. "bob") [0xc7 0x3 0x5 0x62 0x6f 0x62])
-    (is (= (->Extension 5 (byte-literals [0x62 0x6f 0x62])) (unpack (pack (Employee. "bob")))))))
+    (is (= (->Extension 5 (byte-literals [0x62 0x6f 0x62]))
+           (unpack (pack (Employee. "bob")))))))

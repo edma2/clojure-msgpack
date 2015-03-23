@@ -25,4 +25,5 @@
              "[-1, -128]: reserved for future pre-defined extensions.")
      (extend-protocol Packable
        ~class
-       (pack-stream [obj# stream#] (pack-stream (->Extension type# (~f obj#)) stream#)))))
+       (pack-stream [obj# stream#]
+         (pack-stream (->Extension type# (~f obj#)) stream#)))))
