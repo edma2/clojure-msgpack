@@ -1,6 +1,6 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
-            [msgpack.core :refer [pack unpack ->Extended]]))
+            [msgpack.core :refer [pack unpack ->Extension]]))
 
 (defn byte-literals
   [bytes]
@@ -14,7 +14,7 @@
   (clojure.string/join "" (repeat n c)))
 
 (defn- ext [type bytes]
-  (->Extended type (byte-literals bytes)))
+  (->Extension type (byte-literals bytes)))
 
 (defmacro one-way [obj expected]
   `(let [obj# ~obj

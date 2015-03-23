@@ -15,7 +15,7 @@
   (extend-protocol Packable
     Employee
     (pack-stream [obj stream]
-      (pack-stream (->Extended 1 (.getBytes (:name obj))) stream)))
+      (pack-stream (->Extension 1 (.getBytes (:name obj))) stream)))
 
   and this will work:
   (pack (Employee. name))"
@@ -25,4 +25,4 @@
              "[-1, -128]: reserved for future pre-defined extensions.")
      (extend-protocol Packable
        ~class
-       (pack-stream [obj# stream#] (pack-stream (->Extended type# (~f obj#)) stream#)))))
+       (pack-stream [obj# stream#] (pack-stream (->Extension type# (~f obj#)) stream#)))))

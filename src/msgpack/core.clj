@@ -10,10 +10,10 @@
   (pack-stream [this data-output]))
 
 ;; MessagePack allows applications to define application-specific types using
-;; the Extended type. Extended type consists of an integer and a byte array
+;; the Extension type. Extension type consists of an integer and a byte array
 ;; where the integer represents a kind of types and the byte array represents
 ;; data.
-(defrecord Extended [type data])
+(defrecord Extension [type data])
 
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
@@ -131,7 +131,7 @@
   clojure.lang.Symbol
   (pack-stream [sym ^java.io.DataOutput s] (pack-stream (name sym) s))
 
-  Extended
+  Extension
   (pack-stream
     [e ^java.io.DataOutput s]
     (let [type (:type e)
@@ -225,7 +225,7 @@
       bytes)))
 
 (defn- unpack-extended [n ^java.io.DataInput data-input]
-  (->Extended (.readByte data-input) (seq (read-bytes n data-input))))
+  (->Extension (.readByte data-input) (seq (read-bytes n data-input))))
 
 (declare unpack-stream)
 
