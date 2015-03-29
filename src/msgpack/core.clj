@@ -224,7 +224,7 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defn- unpack-extended [n ^java.io.DataInput data-input]
+(defn- unpack-extension [n ^java.io.DataInput data-input]
   (->Extension (.readByte data-input) (seq (read-bytes n data-input))))
 
 (declare unpack-stream)
@@ -289,20 +289,20 @@
             (read-bytes (read-uint32 data-input) data-input)
 
             ; ext format family
-            (= byte 0xd4) (unpack-extended 1 data-input)
-            (= byte 0xd5) (unpack-extended 2 data-input)
-            (= byte 0xd6) (unpack-extended 4 data-input)
-            (= byte 0xd7) (unpack-extended 8 data-input)
-            (= byte 0xd8) (unpack-extended 16 data-input)
+            (= byte 0xd4) (unpack-extension 1 data-input)
+            (= byte 0xd5) (unpack-extension 2 data-input)
+            (= byte 0xd6) (unpack-extension 4 data-input)
+            (= byte 0xd7) (unpack-extension 8 data-input)
+            (= byte 0xd8) (unpack-extension 16 data-input)
 
             (= byte 0xc7)
-            (unpack-extended (read-uint8 data-input) data-input)
+            (unpack-extension (read-uint8 data-input) data-input)
 
             (= byte 0xc8)
-            (unpack-extended (read-uint16 data-input) data-input)
+            (unpack-extension (read-uint16 data-input) data-input)
 
             (= byte 0xc9)
-            (unpack-extended (read-uint32 data-input) data-input)
+            (unpack-extension (read-uint32 data-input) data-input)
 
             ; array format family
             (= (bit-and 2r11110000 byte) 2r10010000)
