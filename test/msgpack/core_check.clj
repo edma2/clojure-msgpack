@@ -26,7 +26,7 @@
 (defmethod normalize clojure.lang.IPersistentMap [m]
   (into {} (for [[k v] m] [(normalize k) (normalize v)])))
 
-(defspec unpack-will-undo-pack 20
+(defspec round-trip 20
   (prop/for-all [v (gen/vector gen/any)]
                 (= (unpack (pack v))
                    (normalize v))))
