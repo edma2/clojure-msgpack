@@ -6,7 +6,7 @@
 (defn- byte-array? [v]
   (= (Class/forName "[B") (class v)))
 
-(defn- normalize
+(defn- normalize-bytes
   "Convert byte arrays to seqs since byte arrays use reference equality."
   [v]
   (postwalk
@@ -37,7 +37,7 @@
   `(let [obj# ~obj
          expected-bytes# (byte-literals ~expected-bytes)]
      (is (= expected-bytes# (pack obj#)))
-     (is (= (normalize obj#) (normalize (unpack expected-bytes#))))))
+     (is (= (normalize-bytes obj#) (normalize-bytes (unpack expected-bytes#))))))
 
 (deftest nil-test
   (testing "nil"
