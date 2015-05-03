@@ -23,7 +23,7 @@
   (byte-array (unsigned-bytes bytes)))
 
 (defn- fill-string [n c]
-  (clojure.string/join "" (repeat n c)))
+  (apply str (repeat n c)))
 
 (defn- ext [type bytes]
   (->Extension type (unsigned-bytes bytes)))
