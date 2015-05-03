@@ -22,7 +22,7 @@
   [bytes]
   (byte-array (unsigned-bytes bytes)))
 
-(defn- fill [n c]
+(defn- fill-string [n c]
   (clojure.string/join "" (repeat n c)))
 
 (defn- ext [type bytes]
@@ -106,21 +106,21 @@
     (one-way 'abc [0xa3 0x61 0x62 0x63])
     (one-way :abc [0xa3 0x61 0x62 0x63])
     (one-way \c [0xa1 0x63])
-    (round-trip (fill 31 \a) (cons 0xbf (repeat 31 0x61))))
+    (round-trip (fill-string 31 \a) (cons 0xbf (repeat 31 0x61))))
   (testing "str 8"
-    (round-trip (fill 32 \b)
+    (round-trip (fill-string 32 \b)
                 (concat [0xd9 0x20] (repeat 32 (byte \b))))
-    (round-trip (fill 100 \c)
+    (round-trip (fill-string 100 \c)
                 (concat [0xd9 0x64] (repeat 100 (byte \c))))
-    (round-trip (fill 255 \d)
+    (round-trip (fill-string 255 \d)
                 (concat [0xd9 0xff] (repeat 255 (byte \d)))))
   (testing "str 16"
-    (round-trip (fill 256 \b)
+    (round-trip (fill-string 256 \b)
                 (concat [0xda 0x01 0x00] (repeat 256 (byte \b))))
-    (round-trip (fill 65535 \c)
+    (round-trip (fill-string 65535 \c)
                 (concat [0xda 0xff 0xff] (repeat 65535 (byte \c)))))
   (testing "str 32"
-    (round-trip (fill 65536 \b)
+    (round-trip (fill-string 65536 \b)
                 (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 (byte \b))))))
 
 (deftest bin-test
