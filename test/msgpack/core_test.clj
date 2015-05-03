@@ -1,6 +1,18 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
+            [clojure.walk :refer [postwalk]]
             [msgpack.core :refer [pack unpack ->Extension]]))
+
+(defn- byte-array? [v]
+  (= (Class/forName "[B") (class v)))
+
+(defn- normalize
+  "Convert byte arrays to seqs since byte arrays use reference equality."
+  [v]
+  (postwalk
+   (fn [v]
+     (if (byte-array? v) (seq v) v))
+   v))
 
 (defn byte-literals
   [bytes]
