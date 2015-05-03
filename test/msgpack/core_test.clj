@@ -14,28 +14,28 @@
      (if (byte-array? v) (seq v) v))
    v))
 
-(defn byte-literals
+(defn unsigned-bytes
   [bytes]
   (map unchecked-byte bytes))
 
-(defn- byte-array-literal
+(defn- unsigned-byte-array
   [bytes]
-  (byte-array (byte-literals bytes)))
+  (byte-array (unsigned-bytes bytes)))
 
 (defn- fill [n c]
   (clojure.string/join "" (repeat n c)))
 
 (defn- ext [type bytes]
-  (->Extension type (byte-literals bytes)))
+  (->Extension type (unsigned-bytes bytes)))
 
 (defmacro one-way [obj expected]
   `(let [obj# ~obj
-         expected# (byte-literals ~expected)]
+         expected# (unsigned-bytes ~expected)]
      (is (= expected# (pack obj#)))))
 
 (defmacro round-trip [obj expected-bytes]
   `(let [obj# ~obj
-         expected-bytes# (byte-literals ~expected-bytes)]
+         expected-bytes# (unsigned-bytes ~expected-bytes)]
      (is (= expected-bytes# (pack obj#)))
      (is (= (normalize-bytes obj#) (normalize-bytes (unpack expected-bytes#))))))
 
@@ -126,13 +126,13 @@
 (deftest bin-test
   (testing "bin 8"
     (round-trip (byte-array 0) [0xc4 0x00])
-    (round-trip (byte-array-literal [0x80]) [0xc4 0x01 0x80])
-    (round-trip (byte-array-literal (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
-    (round-trip (byte-array-literal (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
+    (round-trip (unsigned-byte-array [0x80]) [0xc4 0x01 0x80])
+    (round-trip (unsigned-byte-array (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
+    (round-trip (unsigned-byte-array (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
   (testing "bin 16"
-    (round-trip (byte-array-literal (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+    (round-trip (unsigned-byte-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
   (testing "bin 32"
-    (round-trip (byte-array-literal (repeat 65536 0x80))
+    (round-trip (unsigned-byte-array (repeat 65536 0x80))
                 (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
 
 (deftest ext-test
@@ -168,7 +168,7 @@
     (one-way #{} [0x90])
     (round-trip [[]] [0x91 0x90])
     (round-trip [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
-    (one-way [true 1 (ext 3 (.getBytes "foo")) 0xff {1 false 2 "abc"} (byte-array-literal [0x80]) [1 2 3] "abc"]
+    (one-way [true 1 (ext 3 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
              [0x98 0xc3 0x01 0xc7 0x03 0x03 0x66 0x6f 0x6f 0xcc 0xff 0x82 0x01 0xc2 0x02 0xa3 0x61 0x62 0x63 0xc4 0x01 0x80 0x93 0x01 0x02 0x03 0xa3 0x61 0x62 0x63]))
   (testing "array 16"
     (round-trip (repeat 16 5)
@@ -181,10 +181,10 @@
 (deftest map-test
   (testing "fixmap"
     (round-trip {} [0x80])
-    (one-way {1 true 2 "abc" 3 (byte-array-literal [0x80])}
+    (one-way {1 true 2 "abc" 3 (unsigned-byte-array [0x80])}
              [0x83 0x01 0xc3 0x02 0xa3 0x61 0x62 0x63 0x03 0xc4 0x01 0x80])
     (round-trip {"abc" 5} [0x81 0xa3 0x61 0x62 0x63 0x05])
-    (one-way {(byte-array-literal [0x80]) 0xffff}
+    (one-way {(unsigned-byte-array [0x80]) 0xffff}
              [0x81 0xc4 0x01 0x80 0xcd 0xff 0xff])
     (round-trip {true nil} [0x81 0xc3 0xc0])
     (round-trip {"compact" true "schema" 0}
