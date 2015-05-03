@@ -13,6 +13,7 @@
 ;; the Extension type. Extension type consists of an integer and a byte array
 ;; where the integer represents a kind of types and the byte array represents
 ;; data.
+;; TODO: encode as Extended type: Ratios, Keywords, Symbols, Sets, more?
 (defrecord Extension [type data])
 
 (defmacro cond-let [bindings & clauses]
