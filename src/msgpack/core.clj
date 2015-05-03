@@ -139,7 +139,7 @@
   (pack-stream
     [e ^java.io.DataOutput s]
     (let [type (:type e)
-          data (byte-array (:data e))
+          ^bytes data (:data e)
           len (count data)]
       (do
         (cond
@@ -235,7 +235,7 @@
       bytes)))
 
 (defn- unpack-extension [n ^java.io.DataInput data-input]
-  (->Extension (.readByte data-input) (seq (read-bytes n data-input))))
+  (->Extension (.readByte data-input) (read-bytes n data-input)))
 
 (declare unpack-stream)
 
