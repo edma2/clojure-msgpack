@@ -94,6 +94,9 @@
   clojure.lang.BigInt
   (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
+  ;; TODO: missing biginteger
+  ;; TODO: biginteger vs bigint vs bigdecimal?
+
   Float
   (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
 
@@ -177,6 +180,12 @@
 
   clojure.lang.IPersistentSet
   (pack-stream [set ^java.io.DataOutput s] (pack-stream (sequence set) s)))
+
+;; TODO: friendlier error message?
+;; Current:
+;; java.lang.IllegalArgumentException: No implementation of method:
+;; :pack-stream of protocol: #'msgpack.core/Packable found for class:
+;; java.math.BigInteger
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
