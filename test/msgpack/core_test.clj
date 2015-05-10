@@ -46,7 +46,7 @@
 (defmacro round-trip [obj expected-bytes]
   `(let [obj# ~obj
          expected-bytes# (unsigned-bytes ~expected-bytes)]
-     (is (= expected-bytes# (pack obj#)))
+     (is (= expected-bytes# (seq (pack obj#))))
      (is (= (normalize-bytes obj#) (normalize-bytes (unpack expected-bytes#))))))
 
 (deftest nil-test

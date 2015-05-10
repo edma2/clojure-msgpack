@@ -206,7 +206,7 @@
         data-output (DataOutputStream. output-stream)]
     (do
       (pack-stream obj data-output)
-      (seq (.toByteArray output-stream)))))
+      (.toByteArray output-stream))))
 
 (defn- read-uint8
   [^java.io.DataInput data-input]
