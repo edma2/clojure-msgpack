@@ -80,29 +80,19 @@
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
-  Byte
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Short
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Integer
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Long
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  clojure.lang.BigInt
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  ;; TODO: missing biginteger
-  ;; TODO: biginteger vs bigint vs bigdecimal?
+  ;; TODO: use derive
 
   Float
   (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
 
   Double
   (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
+
+  java.math.BigDecimal
+  (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
+
+  Number
+  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
 
   clojure.lang.Ratio
   (pack-stream

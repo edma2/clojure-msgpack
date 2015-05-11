@@ -9,6 +9,9 @@
 (defn- extension? [v]
   (instance? msgpack.core.Extension v))
 
+(defn- bigdecimal? [v]
+  (instance? java.math.BigDecimal v))
+
 (defn- normalize-extension [e]
   (->Extension (:type e) (seq (:data e))))
 
@@ -26,6 +29,7 @@
        (char? v) (str v)
        (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        (ratio? v) (double v)
+       (bigdecimal? v) (double v) ;; 0.0M != 0.0
        :else v))
    v))
 
@@ -60,6 +64,7 @@
 
 (deftest int-test
   (testing "positive fixnum"
+    (round-trip (biginteger 0) [0x00])
     (round-trip 0 [0x00])
     (round-trip 0x10 [0x10])
     (round-trip 0x7f [0x7f]))
@@ -103,6 +108,7 @@
 (deftest float-test
   (testing "float 32"
     (round-trip 0.0 [0xca 0x00 0x00 0x00 0x00])
+    (round-trip (bigdec 0) [0xca 0x00 0x00 0x00 0x00])
     (round-trip 2.5 [0xca 0x40 0x20 0x00 0x00])
     (round-trip 5/2 [0xca 0x40 0x20 0x00 0x00]))
   (testing "float 64"
