@@ -15,7 +15,7 @@
 (defn- normalize-extension [e]
   (->Extension (:type e) (seq (:data e))))
 
-(defn- normalize-bytes
+(defn- normalize
   "Convert byte arrays to seqs since byte arrays use reference equality."
   [v]
   (postwalk
@@ -51,7 +51,7 @@
   `(let [obj# ~obj
          expected-bytes# (unsigned-bytes ~expected-bytes)]
      (is (= expected-bytes# (seq (pack obj#))))
-     (is (= (normalize-bytes obj#) (normalize-bytes (unpack expected-bytes#))))))
+     (is (= (normalize obj#) (normalize (unpack expected-bytes#))))))
 
 (deftest nil-test
   (testing "nil"
