@@ -31,8 +31,8 @@
             (<= len 0xffffffff)
             (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
 
-(defn- pack-number
-  "Pack n using the most compact representation"
+(defn- pack-int
+  "Pack integer using the most compact representation"
   [n ^java.io.DataOutput s]
   (cond
     ; +fixnum
@@ -57,7 +57,7 @@
     (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
 
 (defn- pack-float
-  "Pack f using the most compact representation"
+  "Pack float using the most compact representation"
   [f ^java.io.DataOutput s]
   (if (<= f Float/MAX_VALUE)
     (do (.writeByte s 0xca) (.writeFloat s f))
@@ -92,7 +92,7 @@
   (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
 
   Number
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
 
   clojure.lang.Ratio
   (pack-stream
