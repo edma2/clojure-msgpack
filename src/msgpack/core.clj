@@ -222,11 +222,11 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defmulti unpack-application-type :type)
-(defmethod unpack-application-type :default [extension] extension)
+(defmulti translate-extension :type)
+(defmethod translate-extension :default [extension] extension)
 
 (defn- unpack-extension [n ^java.io.DataInput data-input]
-  (unpack-application-type
+  (translate-extension
    (->Extension (.readByte data-input) (read-bytes n data-input))))
 
 (declare unpack-stream)
