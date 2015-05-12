@@ -80,8 +80,6 @@
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
-  ;; TODO: use derive
-
   Float
   (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
 
@@ -224,8 +222,12 @@
       (.readFully data-input bytes)
       bytes)))
 
+(defmulti unpack-application-type :type)
+(defmethod unpack-application-type :default [extension] extension)
+
 (defn- unpack-extension [n ^java.io.DataInput data-input]
-  (->Extension (.readByte data-input) (read-bytes n data-input)))
+  (unpack-application-type
+   (->Extension (.readByte data-input) (read-bytes n data-input))))
 
 (declare unpack-stream)
 
