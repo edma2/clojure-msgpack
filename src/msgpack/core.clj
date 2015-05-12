@@ -5,6 +5,8 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
+(declare pack unpack unpack-stream)
+
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
   (pack-stream [this data-output]))
@@ -117,8 +119,10 @@
   Character
   (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
 
+  ; TODO: move to macro
   clojure.lang.Keyword
-  (pack-stream [kw ^java.io.DataOutput s] (pack-stream (name kw) s))
+  (pack-stream [k ^java.io.DataOutput s]
+    (pack-stream (->Extension 4 (pack (name k))) s))
 
   clojure.lang.Symbol
   (pack-stream [sym ^java.io.DataOutput s] (pack-stream (name sym) s))
@@ -223,13 +227,16 @@
       bytes)))
 
 (defmulti translate-extension :type)
-(defmethod translate-extension :default [extension] extension)
+(defmethod translate-extension :default [ext] ext)
+
+; keyword
+; TODO: move to macro
+(defmethod translate-extension 4 [ext]
+  (keyword (unpack (:data ext))))
 
 (defn- unpack-extension [n ^java.io.DataInput data-input]
   (translate-extension
    (->Extension (.readByte data-input) (read-bytes n data-input))))
-
-(declare unpack-stream)
 
 (defn- unpack-n [n ^java.io.DataInput data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))

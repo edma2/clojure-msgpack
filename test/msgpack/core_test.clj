@@ -25,7 +25,6 @@
        (extension? v) (normalize-extension v)
        ;; TODO: treat below as extended types
        (symbol? v) (name v)
-       (keyword? v) (name v)
        (char? v) (str v)
        (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        (ratio? v) (double v)
@@ -120,7 +119,6 @@
     (round-trip "" [0xa0])
     (round-trip "abc" [0xa3 0x61 0x62 0x63])
     (round-trip 'abc [0xa3 0x61 0x62 0x63])
-    (round-trip :abc [0xa3 0x61 0x62 0x63])
     (round-trip \c [0xa1 0x63])
     (round-trip (fill-string 31 \a) (cons 0xbf (repeat 31 0x61))))
   (testing "str 8"
@@ -176,6 +174,10 @@
   (testing "ext 32"
     (round-trip (extension 5 (repeat 65536 0x80))
                 (concat [0xc9 0x00 0x01 0x00 0x00 0x05] (repeat 65536 0x80)))))
+
+(deftest clojure-test
+  (testing "keyword"
+    (round-trip :abc [0xd6 0x4 0xa3 0x61 0x62 0x63])))
 
 (deftest array-test
   (testing "fixarray"
