@@ -226,16 +226,16 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defmulti translate-extension :type)
-(defmethod translate-extension :default [ext] ext)
+(defmulti read-extension :type)
+(defmethod read-extension :default [ext] ext)
 
 ; keyword
 ; TODO: move to macro
-(defmethod translate-extension 4 [ext]
+(defmethod read-extension 4 [ext]
   (keyword (unpack (:data ext))))
 
 (defn- unpack-extension [n ^java.io.DataInput data-input]
-  (translate-extension
+  (read-extension
    (->Extension (.readByte data-input) (read-bytes n data-input))))
 
 (defn- unpack-n [n ^java.io.DataInput data-input]
