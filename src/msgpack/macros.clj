@@ -11,7 +11,7 @@
      (do
        (extend-protocol Packable ~class
          (pack-stream [~@pack-args ^java.io.DataOutput s#]
-           (pack-stream (->Extension type# ~pack) s#)))
-       (defmethod refine-extension type# [ext#]
+           (pack-stream (->Ext type# ~pack) s#)))
+       (defmethod refine-ext type# [ext#]
          (let [~@unpack-args (:data ext#)]
            ~unpack)))))

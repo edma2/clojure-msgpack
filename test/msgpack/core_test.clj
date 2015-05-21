@@ -7,14 +7,14 @@
 (defn- byte-array? [v]
   (instance? (Class/forName "[B") v))
 
-(defn- extension? [v]
-  (instance? msgpack.core.Extension v))
+(defn- ext? [v]
+  (instance? msgpack.core.Ext v))
 
 (defn- bigdecimal? [v]
   (instance? java.math.BigDecimal v))
 
-(defn- normalize-extension [e]
-  (msg/->Extension (:type e) (seq (:data e))))
+(defn- normalize-ext [e]
+  (msg/->Ext (:type e) (seq (:data e))))
 
 (defn- normalize
   "Convert byte arrays to seqs since byte arrays use reference equality."
@@ -23,8 +23,8 @@
    (fn [v]
      (cond
        (byte-array? v) (seq v)
-       (extension? v) (normalize-extension v)
-       ;; TODO: treat below as extended types
+       (ext? v) (normalize-ext v)
+       ;; TODO: treat below as ext types
        (char? v) (str v)
        (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        (ratio? v) (double v)
@@ -43,8 +43,8 @@
 (defn- fill-string [n c]
   (apply str (repeat n c)))
 
-(defn- extension [type bytes]
-  (msg/->Extension type (unsigned-byte-array bytes)))
+(defn- ext [type bytes]
+  (msg/->Ext type (unsigned-byte-array bytes)))
 
 (defmacro round-trip [obj expected-bytes]
   `(let [obj# ~obj
@@ -150,28 +150,28 @@
 
 (deftest ext-test
   (testing "fixext 1"
-    (round-trip (extension 5 [0x80]) [0xd4 0x05 0x80]))
+    (round-trip (ext 5 [0x80]) [0xd4 0x05 0x80]))
   (testing "fixext 2"
-    (round-trip (extension 5 [0x80 0x80]) [0xd5 0x05 0x80 0x80]))
+    (round-trip (ext 5 [0x80 0x80]) [0xd5 0x05 0x80 0x80]))
   (testing "fixext 4"
-    (round-trip (extension 5 [0x80 0x80 0x80 0x80])
+    (round-trip (ext 5 [0x80 0x80 0x80 0x80])
                 [0xd6 0x05 0x80 0x80 0x80 0x80]))
   (testing "fixext 8"
-    (round-trip (extension 5 [0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80])
+    (round-trip (ext 5 [0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80])
                 [0xd7 0x05 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80]))
   (testing "fixext 16"
-    (round-trip (extension 5 (repeat 16 0x80))
+    (round-trip (ext 5 (repeat 16 0x80))
                 (concat [0xd8 0x05] (repeat 16 0x80))))
   (testing "ext 8"
-    (round-trip (extension 55 [0x1 0x3 0x11])
+    (round-trip (ext 55 [0x1 0x3 0x11])
                 [0xc7 0x3 0x37 0x1 0x3 0x11])
-    (round-trip (extension 5 (repeat 255 0x80))
+    (round-trip (ext 5 (repeat 255 0x80))
                 (concat [0xc7 0xff 0x05] (repeat 255 0x80))))
   (testing "ext 16"
-    (round-trip (extension 5 (repeat 256 0x80))
+    (round-trip (ext 5 (repeat 256 0x80))
                 (concat [0xc8 0x01 0x00 0x05] (repeat 256 0x80))))
   (testing "ext 32"
-    (round-trip (extension 5 (repeat 65536 0x80))
+    (round-trip (ext 5 (repeat 65536 0x80))
                 (concat [0xc9 0x00 0x01 0x00 0x00 0x05] (repeat 65536 0x80)))))
 
 (deftest clojure-test
@@ -188,7 +188,7 @@
     (round-trip #{} [0x90])
     (round-trip [[]] [0x91 0x90])
     (round-trip [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
-    (round-trip [true 1 (msg/->Extension 5 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
+    (round-trip [true 1 (msg/->Ext 5 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
                 [0x98 0xc3 0x1 0xc7 0x3 0x5 0x66 0x6f 0x6f 0xcc 0xff 0x82 0x1 0xc2 0x2 0xa3 0x61 0x62 0x63 0xc4 0x1 0x80 0x93 0x1 0x2 0x3 0xa3 0x61 0x62 0x63]))
   (testing "array 16"
     (round-trip (repeat 16 5)

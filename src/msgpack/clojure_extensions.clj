@@ -1,5 +1,5 @@
 (ns msgpack.clojure-extensions
-  "MessagePack extensions for Clojure-specific types"
+  "Extended types for Clojure-specific types"
   (:require [msgpack.core :as msg]
             [msgpack.macros :refer [extend-msgpack]]))
 

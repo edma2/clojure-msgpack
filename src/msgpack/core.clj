@@ -12,11 +12,11 @@
   (pack-stream [this data-output]))
 
 ;; MessagePack allows applications to define application-specific types using
-;; the Extension type. Extension type consists of an integer and a byte array
+;; the Extended type. Extended type consists of an integer and a byte array
 ;; where the integer represents a kind of types and the byte array represents
 ;; data.
 ;; TODO: encode as Extended type: Ratios, Keywords, Symbols, Sets, more?
-(defrecord Extension [type data])
+(defrecord Ext [type data])
 
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
@@ -119,7 +119,7 @@
   Character
   (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
 
-  Extension
+  Ext
   (pack-stream
     [e ^java.io.DataOutput s]
     (let [type (:type e)
@@ -218,15 +218,15 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defmulti refine-extension
-  "Refine Extension as an application type."
+(defmulti refine-ext
+  "Refine Extended type to an application-specific type."
   :type)
 
-(defmethod refine-extension :default [ext] ext)
+(defmethod refine-ext :default [ext] ext)
 
-(defn- unpack-extension [n ^java.io.DataInput data-input]
-  (refine-extension
-   (->Extension (.readByte data-input) (read-bytes n data-input))))
+(defn- unpack-ext [n ^java.io.DataInput data-input]
+  (refine-ext
+   (->Ext (.readByte data-input) (read-bytes n data-input))))
 
 (defn- unpack-n [n ^java.io.DataInput data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))
@@ -288,20 +288,20 @@
             (read-bytes (read-uint32 data-input) data-input)
 
             ; ext format family
-            (= byte 0xd4) (unpack-extension 1 data-input)
-            (= byte 0xd5) (unpack-extension 2 data-input)
-            (= byte 0xd6) (unpack-extension 4 data-input)
-            (= byte 0xd7) (unpack-extension 8 data-input)
-            (= byte 0xd8) (unpack-extension 16 data-input)
+            (= byte 0xd4) (unpack-ext 1 data-input)
+            (= byte 0xd5) (unpack-ext 2 data-input)
+            (= byte 0xd6) (unpack-ext 4 data-input)
+            (= byte 0xd7) (unpack-ext 8 data-input)
+            (= byte 0xd8) (unpack-ext 16 data-input)
 
             (= byte 0xc7)
-            (unpack-extension (read-uint8 data-input) data-input)
+            (unpack-ext (read-uint8 data-input) data-input)
 
             (= byte 0xc8)
-            (unpack-extension (read-uint16 data-input) data-input)
+            (unpack-ext (read-uint16 data-input) data-input)
 
             (= byte 0xc9)
-            (unpack-extension (read-uint32 data-input) data-input)
+            (unpack-ext (read-uint32 data-input) data-input)
 
             ; array format family
             (= (bit-and 2r11110000 byte) 2r10010000)
