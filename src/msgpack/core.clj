@@ -116,9 +116,6 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
-  Character
-  (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
-
   Ext
   (pack-stream
     [e ^java.io.DataOutput s]
