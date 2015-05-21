@@ -24,10 +24,10 @@
      (cond
        (byte-array? v) (seq v)
        (ext? v) (normalize-ext v)
+       (bigdecimal? v) (double v) ;; 0.0M != 0.0
        ;; TODO: treat below as ext types
        (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        (ratio? v) (double v)
-       (bigdecimal? v) (double v) ;; 0.0M != 0.0
        :else v))
    v))
 
