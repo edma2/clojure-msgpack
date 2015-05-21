@@ -17,6 +17,6 @@
 
 (extend-msgpack
  java.lang.Character
- 6
+ 5
  [bytes] (first (char-array (msg/unpack bytes)))
  [c] (msg/pack (str c)))
