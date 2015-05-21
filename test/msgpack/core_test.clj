@@ -1,7 +1,7 @@
 (ns msgpack.core-test
   (:require [clojure.test :refer :all]
             [clojure.walk :refer [postwalk]]
-            [msgpack.core :refer [pack unpack ->Extension]]
+            [msgpack.core :as msg]
             msgpack.clojure-extensions))
 
 (defn- byte-array? [v]
@@ -14,7 +14,7 @@
   (instance? java.math.BigDecimal v))
 
 (defn- normalize-extension [e]
-  (->Extension (:type e) (seq (:data e))))
+  (msg/->Extension (:type e) (seq (:data e))))
 
 (defn- normalize
   "Convert byte arrays to seqs since byte arrays use reference equality."
@@ -44,13 +44,13 @@
   (apply str (repeat n c)))
 
 (defn- extension [type bytes]
-  (->Extension type (unsigned-byte-array bytes)))
+  (msg/->Extension type (unsigned-byte-array bytes)))
 
 (defmacro round-trip [obj expected-bytes]
   `(let [obj# ~obj
          expected-bytes# (unsigned-bytes ~expected-bytes)]
-     (is (= expected-bytes# (seq (pack obj#))))
-     (is (= (normalize obj#) (normalize (unpack expected-bytes#))))))
+     (is (= expected-bytes# (seq (msg/pack obj#))))
+     (is (= (normalize obj#) (normalize (msg/unpack expected-bytes#))))))
 
 (deftest nil-test
   (testing "nil"
@@ -188,7 +188,7 @@
     (round-trip #{} [0x90])
     (round-trip [[]] [0x91 0x90])
     (round-trip [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
-    (round-trip [true 1 (->Extension 5 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
+    (round-trip [true 1 (msg/->Extension 5 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
                 [0x98 0xc3 0x1 0xc7 0x3 0x5 0x66 0x6f 0x6f 0xcc 0xff 0x82 0x1 0xc2 0x2 0xa3 0x61 0x62 0x63 0xc4 0x1 0x80 0x93 0x1 0x2 0x3 0xa3 0x61 0x62 0x63]))
   (testing "array 16"
     (round-trip (repeat 16 5)
