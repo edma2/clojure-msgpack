@@ -119,14 +119,6 @@
   Character
   (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
 
-  ; TODO: move to macro
-  clojure.lang.Keyword
-  (pack-stream [k ^java.io.DataOutput s]
-    (pack-stream (->Extension 4 (pack (name k))) s))
-
-  clojure.lang.Symbol
-  (pack-stream [sym ^java.io.DataOutput s] (pack-stream (name sym) s))
-
   Extension
   (pack-stream
     [e ^java.io.DataOutput s]
@@ -226,16 +218,14 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defmulti read-extension :type)
-(defmethod read-extension :default [ext] ext)
+(defmulti refine-extension
+  "Refine Extension as an application type."
+  :type)
 
-; keyword
-; TODO: move to macro
-(defmethod read-extension 4 [ext]
-  (keyword (unpack (:data ext))))
+(defmethod refine-extension :default [ext] ext)
 
 (defn- unpack-extension [n ^java.io.DataInput data-input]
-  (read-extension
+  (refine-extension
    (->Extension (.readByte data-input) (read-bytes n data-input))))
 
 (defn- unpack-n [n ^java.io.DataInput data-input]
