@@ -14,3 +14,9 @@
  4
  [bytes] (symbol (msg/unpack bytes))
  [sym] (msg/pack (name sym)))
+
+(extend-msgpack
+ java.lang.Character
+ 6
+ [bytes] (first (char-array (msg/unpack bytes)))
+ [c] (msg/pack (str c)))

@@ -25,7 +25,6 @@
        (byte-array? v) (seq v)
        (ext? v) (normalize-ext v)
        ;; TODO: treat below as ext types
-       (char? v) (str v)
        (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        (ratio? v) (double v)
        (bigdecimal? v) (double v) ;; 0.0M != 0.0
@@ -118,7 +117,6 @@
     (round-trip "hello world" [0xab 0x68 0x65 0x6c 0x6c 0x6f 0x20 0x77 0x6f 0x72 0x6c 0x64])
     (round-trip "" [0xa0])
     (round-trip "abc" [0xa3 0x61 0x62 0x63])
-    (round-trip \c [0xa1 0x63])
     (round-trip (fill-string 31 \a) (cons 0xbf (repeat 31 0x61))))
   (testing "str 8"
     (round-trip (fill-string 32 \b)
@@ -178,8 +176,9 @@
   (testing "clojure.lang.Keyword"
     (round-trip :abc [0xd6 0x3 0xa3 0x61 0x62 0x63]))
   (testing "clojure.lang.Symbol"
-    (round-trip 'abc [0xd6 0x4 0xa3 0x61 0x62 0x63])))
-
+    (round-trip 'abc [0xd6 0x4 0xa3 0x61 0x62 0x63]))
+  (testing "java.lang.Character"
+    (round-trip \c [0xd5 0x6 0xa1 0x63])))
 
 (deftest array-test
   (testing "fixarray"
