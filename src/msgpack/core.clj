@@ -94,11 +94,6 @@
   Number
   (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
 
-  clojure.lang.Ratio
-  (pack-stream
-    [r ^java.io.DataOutput s]
-    (pack-stream (double r) s))
-
   String
   (pack-stream
     [str ^java.io.DataOutput s]

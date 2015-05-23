@@ -20,3 +20,10 @@
  5
  [bytes] (first (char-array (msg/unpack bytes)))
  [c] (msg/pack (str c)))
+
+(extend-msgpack
+ clojure.lang.Ratio
+ 6
+ [bytes] (let [seq (msg/unpack bytes)]
+           (/ (first seq) (second seq)))
+ [r] (msg/pack [(numerator r) (denominator r)]))
