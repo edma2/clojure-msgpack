@@ -7,13 +7,13 @@
  clojure.lang.Keyword
  3
  [bytes] (keyword (msg/unpack bytes))
- [kw] (msg/pack (name kw)))
+ [k] (msg/pack (name k)))
 
 (extend-msgpack
  clojure.lang.Symbol
  4
  [bytes] (symbol (msg/unpack bytes))
- [sym] (msg/pack (name sym)))
+ [s] (msg/pack (name s)))
 
 (extend-msgpack
  java.lang.Character
