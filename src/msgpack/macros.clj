@@ -4,7 +4,7 @@
   (:require [msgpack.core :refer :all]))
 
 (defmacro extend-msgpack
-  [class type unpack-args unpack pack-args pack]
+  [class type pack-args pack unpack-args unpack]
   `(let [type# ~type]
      (assert (<= 0 type# 127)
              "[-1, -128]: reserved for future pre-defined extensions.")
