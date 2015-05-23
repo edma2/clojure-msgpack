@@ -153,10 +153,7 @@
               (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s))))
-
-  clojure.lang.IPersistentSet
-  (pack-stream [set ^java.io.DataOutput s] (pack-stream (sequence set) s)))
+              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
 
 ;; TODO: friendlier error message?
 ;; Current:

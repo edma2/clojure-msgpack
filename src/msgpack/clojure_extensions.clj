@@ -27,3 +27,9 @@
  [bytes] (let [seq (msg/unpack bytes)]
            (/ (first seq) (second seq)))
  [r] (msg/pack [(numerator r) (denominator r)]))
+
+(extend-msgpack
+ clojure.lang.IPersistentSet
+ 7
+ [bytes] (set (msg/unpack bytes))
+ [s] (msg/pack (seq s)))

@@ -25,8 +25,6 @@
        (byte-array? v) (seq v)
        (ext? v) (normalize-ext v)
        (bigdecimal? v) (double v) ;; 0.0M != 0.0
-       ;; TODO: treat below as ext types
-       (set? v) (into [] v) ;; b/c (== nil (seq empty-set))
        :else v))
    v))
 
@@ -178,13 +176,14 @@
   (testing "java.lang.Character"
     (round-trip \c [0xd5 0x5 0xa1 0x63]))
   (testing "clojure.lang.Ratio"
-    (round-trip 5/2 [0xc7 0x3 0x6 0x92 0x5 0x2])))
+    (round-trip 5/2 [0xc7 0x3 0x6 0x92 0x5 0x2]))
+  (testing "clojure.lang.IPersistentSet"
+    (round-trip #{} [0xd4 0x7 0xc0])))
 
 (deftest array-test
   (testing "fixarray"
     (round-trip '() [0x90])
     (round-trip [] [0x90])
-    (round-trip #{} [0x90])
     (round-trip [[]] [0x91 0x90])
     (round-trip [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
     (round-trip [true 1 (msg/->Ext 100 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
