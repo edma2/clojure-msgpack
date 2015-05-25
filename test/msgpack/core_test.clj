@@ -7,9 +7,6 @@
 (defn- byte-array? [v]
   (instance? (Class/forName "[B") v))
 
-(defn- ext? [v]
-  (instance? msgpack.core.Ext v))
-
 (defn- bigdecimal? [v]
   (instance? java.math.BigDecimal v))
 
