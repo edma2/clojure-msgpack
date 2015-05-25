@@ -104,10 +104,5 @@ You can also define your own Extended types with `extend-msgpack`.
 ; => (#user.Person{:name "bob"} 5 "test")
 ```
 
-## TODO
-* Error checking
-* Compatibility mode
-* Benchmarks
-
 ## License
 clojure-msgpack is MIT licensed. See the included LICENSE file for more details.
