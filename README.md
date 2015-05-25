@@ -59,8 +59,9 @@ clojure.lang.IPersistentMap | Map
 msgpack.core.Ext	    | Extended
 
 ### Clojure Extended types:
-Native Clojure types that don't have an obvious MessagePack counterpart are
-given Extended types.
+Some native Clojure types don't have an obvious MessagePack counterpart. We can
+serialize them as Extended types. To enable automatic conversion of these
+types, load the `clojure-extensions` library.
 
 Clojure			    | MessagePack
 ----------------------------|------------
@@ -69,9 +70,6 @@ clojure.lang.Symbol	    | Extended (type = 4)
 java.lang.Character	    | Extended (type = 5)
 clojure.lang.Ratio	    | Extended (type = 6)
 clojure.lang.IPersistentSet | Extended (type = 7)
-
-To enable automatic conversion of these types, load the `clojure-extensions`
-library.
 
 With `msgpack.clojure-extensions`:
 ```clojure
