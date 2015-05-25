@@ -14,13 +14,14 @@
   (instance? java.math.BigDecimal v))
 
 (defn normalize
-  "Convert byte arrays to seqs since byte arrays use reference equality."
+  "Equality is not defined for Java arrays. Instead convert them into sequences
+  and compare them that way."
   [v]
   (postwalk
    (fn [v]
      (cond
        (byte-array? v) (seq v)
-       (bigdecimal? v) (double v) ;; 0.0M != 0.0
+       (bigdecimal? v) (double v) ;; (not (= 0.0M 0.0))
        :else v))
    v))
 
