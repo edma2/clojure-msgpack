@@ -16,7 +16,7 @@
 (defn- normalize-ext [e]
   (msg/->Ext (:type e) (seq (:data e))))
 
-(defn- normalize
+(defn normalize
   "Convert byte arrays to seqs since byte arrays use reference equality."
   [v]
   (postwalk
