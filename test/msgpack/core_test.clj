@@ -10,7 +10,7 @@
 (defn- bigdecimal? [v]
   (instance? java.math.BigDecimal v))
 
-(defn normalize
+(defn- normalize
   "Equality is not defined for Java arrays. Instead convert them into sequences
   and compare them that way."
   [v]
