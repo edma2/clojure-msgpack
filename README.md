@@ -70,17 +70,17 @@ java.lang.Character	    | Extended (type = 5)
 clojure.lang.Ratio	    | Extended (type = 6)
 clojure.lang.IPersistentSet | Extended (type = 7)
 
-To enable automatic conversion of these types, load the clojure-extensions
+To enable automatic conversion of these types, load the `clojure-extensions`
 library.
 
-With msgpack.clojure-extensions:
+With `msgpack.clojure-extensions`:
 ```clojure
 (require 'msgpack.clojure-extensions)
 (msg/pack :hello)
 ; => #<byte[] [B@a8c55bf>
 ```
 
-Without msgpack.clojure-extensions:
+Without `msgpack.clojure-extensions`:
 ```clojure
 (msg/pack :hello)
 ; => IllegalArgumentException No implementation of method: :pack-stream of
