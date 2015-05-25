@@ -31,8 +31,8 @@
  clojure.lang.Ratio
  6
  [r] (msg/pack [(numerator r) (denominator r)])
- [bytes] (let [seq (msg/unpack bytes)]
-           (/ (first seq) (second seq))))
+ [bytes] (let [[n d] (msg/unpack bytes)]
+           (/ n d)))
 
 (extend-msgpack
  clojure.lang.IPersistentSet
