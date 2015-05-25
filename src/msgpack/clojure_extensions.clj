@@ -3,16 +3,22 @@
   (:require [msgpack.core :as msg]
             [msgpack.macros :refer [extend-msgpack]]))
 
+(defn- keyword->str
+  "Convert keyword to string with namespace preserved.
+  Example: :A/A => \"A/A\""
+  [k]
+  (subs (str k) 1))
+
 (extend-msgpack
  clojure.lang.Keyword
  3
- [k] (msg/pack (name k))
+ [k] (msg/pack (keyword->str k))
  [bytes] (keyword (msg/unpack bytes)))
 
 (extend-msgpack
  clojure.lang.Symbol
  4
- [s] (msg/pack (name s))
+ [s] (msg/pack (str s))
  [bytes] (symbol (msg/unpack bytes)))
 
 (extend-msgpack
