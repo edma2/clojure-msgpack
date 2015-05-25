@@ -13,9 +13,6 @@
 (defn- bigdecimal? [v]
   (instance? java.math.BigDecimal v))
 
-(defn- normalize-ext [e]
-  (msg/->Ext (:type e) (seq (:data e))))
-
 (defn normalize
   "Convert byte arrays to seqs since byte arrays use reference equality."
   [v]
@@ -23,7 +20,6 @@
    (fn [v]
      (cond
        (byte-array? v) (seq v)
-       (ext? v) (normalize-ext v)
        (bigdecimal? v) (double v) ;; 0.0M != 0.0
        :else v))
    v))
