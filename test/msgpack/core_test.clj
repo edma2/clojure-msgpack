@@ -22,7 +22,7 @@
        :else v))
    v))
 
-(defn unsigned-bytes
+(defn- unsigned-bytes
   [bytes]
   (map unchecked-byte bytes))
 
