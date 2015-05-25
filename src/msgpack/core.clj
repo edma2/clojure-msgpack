@@ -154,12 +154,6 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
 
-;; TODO: friendlier error message?
-;; Current:
-;; java.lang.IllegalArgumentException: No implementation of method:
-;; :pack-stream of protocol: #'msgpack.core/Packable found for class:
-;; java.math.BigInteger
-
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
 
