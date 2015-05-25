@@ -5,15 +5,17 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
+(declare pack unpack unpack-stream)
+
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
   (pack-stream [this data-output]))
 
 ;; MessagePack allows applications to define application-specific types using
-;; the Extension type. Extension type consists of an integer and a byte array
+;; the Extended type. Extended type consists of an integer and a byte array
 ;; where the integer represents a kind of types and the byte array represents
 ;; data.
-(defrecord Extension [type data])
+(defrecord Ext [type data])
 
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
@@ -30,8 +32,8 @@
             (<= len 0xffffffff)
             (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
 
-(defn- pack-number
-  "Pack n using the most compact representation"
+(defn- pack-int
+  "Pack integer using the most compact representation"
   [n ^java.io.DataOutput s]
   (cond
     ; +fixnum
@@ -56,7 +58,7 @@
     (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
 
 (defn- pack-float
-  "Pack f using the most compact representation"
+  "Pack float using the most compact representation"
   [f ^java.io.DataOutput s]
   (if (<= f Float/MAX_VALUE)
     (do (.writeByte s 0xca) (.writeFloat s f))
@@ -79,31 +81,17 @@
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
-  Byte
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Short
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Integer
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  Long
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
-  clojure.lang.BigInt
-  (pack-stream [n ^java.io.DataOutput s] (pack-number n s))
-
   Float
   (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
 
   Double
   (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
 
-  clojure.lang.Ratio
-  (pack-stream
-    [r ^java.io.DataOutput s]
-    (pack-stream (double r) s))
+  java.math.BigDecimal
+  (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
+
+  Number
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
 
   String
   (pack-stream
@@ -122,20 +110,11 @@
               (<= len 0xffffffff)
               (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
-  Character
-  (pack-stream [c ^java.io.DataOutput s] (pack-stream (str c) s))
-
-  clojure.lang.Keyword
-  (pack-stream [kw ^java.io.DataOutput s] (pack-stream (name kw) s))
-
-  clojure.lang.Symbol
-  (pack-stream [sym ^java.io.DataOutput s] (pack-stream (name sym) s))
-
-  Extension
+  Ext
   (pack-stream
     [e ^java.io.DataOutput s]
     (let [type (:type e)
-          data (byte-array (:data e))
+          ^bytes data (:data e)
           len (count data)]
       (do
         (cond
@@ -173,10 +152,7 @@
               (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s))))
-
-  clojure.lang.IPersistentSet
-  (pack-stream [set ^java.io.DataOutput s] (pack-stream (sequence set) s)))
+              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
@@ -196,7 +172,7 @@
         data-output (DataOutputStream. output-stream)]
     (do
       (pack-stream obj data-output)
-      (seq (.toByteArray output-stream)))))
+      (.toByteArray output-stream))))
 
 (defn- read-uint8
   [^java.io.DataInput data-input]
@@ -224,10 +200,15 @@
       (.readFully data-input bytes)
       bytes)))
 
-(defn- unpack-extension [n ^java.io.DataInput data-input]
-  (->Extension (.readByte data-input) (seq (read-bytes n data-input))))
+(defmulti refine-ext
+  "Refine Extended type to an application-specific type."
+  :type)
 
-(declare unpack-stream)
+(defmethod refine-ext :default [ext] ext)
+
+(defn- unpack-ext [n ^java.io.DataInput data-input]
+  (refine-ext
+   (->Ext (.readByte data-input) (read-bytes n data-input))))
 
 (defn- unpack-n [n ^java.io.DataInput data-input]
   (doall (for [_ (range n)] (unpack-stream data-input))))
@@ -289,20 +270,20 @@
             (read-bytes (read-uint32 data-input) data-input)
 
             ; ext format family
-            (= byte 0xd4) (unpack-extension 1 data-input)
-            (= byte 0xd5) (unpack-extension 2 data-input)
-            (= byte 0xd6) (unpack-extension 4 data-input)
-            (= byte 0xd7) (unpack-extension 8 data-input)
-            (= byte 0xd8) (unpack-extension 16 data-input)
+            (= byte 0xd4) (unpack-ext 1 data-input)
+            (= byte 0xd5) (unpack-ext 2 data-input)
+            (= byte 0xd6) (unpack-ext 4 data-input)
+            (= byte 0xd7) (unpack-ext 8 data-input)
+            (= byte 0xd8) (unpack-ext 16 data-input)
 
             (= byte 0xc7)
-            (unpack-extension (read-uint8 data-input) data-input)
+            (unpack-ext (read-uint8 data-input) data-input)
 
             (= byte 0xc8)
-            (unpack-extension (read-uint16 data-input) data-input)
+            (unpack-ext (read-uint16 data-input) data-input)
 
             (= byte 0xc9)
-            (unpack-extension (read-uint32 data-input) data-input)
+            (unpack-ext (read-uint32 data-input) data-input)
 
             ; array format family
             (= (bit-and 2r11110000 byte) 2r10010000)
