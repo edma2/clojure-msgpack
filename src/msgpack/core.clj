@@ -305,11 +305,17 @@
             (= byte 0xdf)
             (unpack-map (read-uint32 data-input) data-input)))
 
+(defn- to-byte-array
+  [bytes]
+  (if (instance? (Class/forName "[B") bytes)
+    bytes
+    (byte-array bytes)))
+
 (defn unpack
   "Unpack bytes as MessagePack object."
   [bytes]
   (-> bytes
-      byte-array
+      to-byte-array
       ByteArrayInputStream.
       DataInputStream.
       unpack-stream))
