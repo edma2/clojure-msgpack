@@ -60,9 +60,10 @@
 (defn- pack-float
   "Pack float using the most compact representation"
   [f ^java.io.DataOutput s]
-  (if (<= f Float/MAX_VALUE)
-    (do (.writeByte s 0xca) (.writeFloat s f))
-    (do (.writeByte s 0xcb) (.writeDouble s f))))
+  (if (or (= java.lang.Double (class f))
+          (> f Float/MAX_VALUE))
+    (do (.writeByte s 0xcb) (.writeDouble s f))
+    (do (.writeByte s 0xca) (.writeFloat s f))))
 
 (defn- pack-coll
   [coll ^java.io.DataOutput s]
