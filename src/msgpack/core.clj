@@ -75,14 +75,6 @@
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
-  java.lang.Float
-  (pack-stream [f ^java.io.DataOutput s]
-    (do (.writeByte s 0xca) (.writeFloat s f)))
-
-  java.lang.Double
-  (pack-stream [d ^java.io.DataOutput s]
-    (do (.writeByte s 0xcb) (.writeDouble s d)))
-
   java.lang.Byte
   (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
 
@@ -100,6 +92,14 @@
 
   clojure.lang.BigInt
   (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  java.lang.Float
+  (pack-stream [f ^java.io.DataOutput s]
+    (do (.writeByte s 0xca) (.writeFloat s f)))
+
+  java.lang.Double
+  (pack-stream [d ^java.io.DataOutput s]
+    (do (.writeByte s 0xcb) (.writeDouble s d)))
 
   java.lang.String
   (pack-stream
