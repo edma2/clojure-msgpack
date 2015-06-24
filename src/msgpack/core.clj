@@ -32,7 +32,6 @@
             (<= len 0xffffffff)
             (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
 
-;; TODO: throw IllegalArgumentException if out of range
 (defn- pack-int
   "Pack integer using the most compact representation"
   [n ^java.io.DataOutput s]
