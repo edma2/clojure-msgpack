@@ -58,13 +58,6 @@
     ; int 64
     (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
 
-(defn- pack-float
-  "Pack float using the most compact representation"
-  [f ^java.io.DataOutput s]
-  (if (<= f Float/MAX_VALUE)
-    (do (.writeByte s 0xca) (.writeFloat s f))
-    (do (.writeByte s 0xcb) (.writeDouble s f))))
-
 (defn- pack-coll
   [coll ^java.io.DataOutput s]
   (doseq [item coll] (pack-stream item s)))
@@ -75,26 +68,40 @@
     [_ ^java.io.DataOutput s]
     (.writeByte s 0xc0))
 
-  Boolean
+  java.lang.Boolean
   (pack-stream
     [bool ^java.io.DataOutput s]
     (if bool
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
-  Float
-  (pack-stream [f ^java.io.DataOutput s] (pack-float f s))
+  java.lang.Float
+  (pack-stream [f ^java.io.DataOutput s]
+    (do (.writeByte s 0xca) (.writeFloat s f)))
 
-  Double
-  (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
+  java.lang.Double
+  (pack-stream [d ^java.io.DataOutput s]
+    (do (.writeByte s 0xcb) (.writeDouble s d)))
 
-  java.math.BigDecimal
-  (pack-stream [d ^java.io.DataOutput s] (pack-float d s))
-
-  Number
+  java.lang.Byte
   (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
 
-  String
+  java.lang.Short
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  java.lang.Integer
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  java.lang.Long
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  java.math.BigInteger
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  clojure.lang.BigInt
+  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+
+  java.lang.String
   (pack-stream
     [str ^java.io.DataOutput s]
     (cond-let [bytes (.getBytes str (Charset/forName "UTF-8"))
