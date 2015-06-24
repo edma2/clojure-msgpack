@@ -100,6 +100,10 @@
   java.lang.Double
   (pack-stream [d ^java.io.DataOutput s]
     (do (.writeByte s 0xcb) (.writeDouble s d)))
+  
+  java.math.BigDecimal
+  (pack-stream [d ^java.io.DataOutput s]
+    (pack-stream (.doubleValue d) s))
 
   java.lang.String
   (pack-stream
