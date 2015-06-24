@@ -56,7 +56,8 @@
     ; int 32
     (<= -0x80000000 n -1)         (do (.writeByte s 0xd2) (.writeInt s n))
     ; int 64
-    (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))))
+    (<= -0x8000000000000000 n -1) (do (.writeByte s 0xd3) (.writeLong s n))
+    :else (throw (IllegalArgumentException. (str "Integer value out of bounds: " n)))))
 
 (defn- pack-coll
   [coll ^java.io.DataOutput s]
