@@ -12,7 +12,7 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 
 ## Usage
 
-### Basic:
+### Basic
 * ```pack```: Serialize object as a sequence of java.lang.Bytes.
 * ```unpack``` Deserialize bytes as a Clojure object.
 ```clojure
@@ -26,7 +26,7 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 ; => {:schema 0, :compact true}
 `````
 
-### Streaming:
+### Streaming
 * ```unpack-stream```: Takes a [java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html) as an argument. Usually you wrap this around an [InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)
 * ```pack-stream```: Takes a [java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html) as an argument. Usually you wrap this around an [OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
 ```clojure
@@ -43,7 +43,7 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 ; => {:schema 0, :compact true}
 ```
 
-### Core types:
+### Core types
 
 Clojure			                | MessagePack
 ----------------------------|------------
@@ -63,7 +63,9 @@ clojure.lang.Sequential	    | Array
 clojure.lang.IPersistentMap | Map
 msgpack.core.Ext	          | Extended
 
-### Clojure Extended types:
+Unrecognized types produce IllegalArgumentExceptions.  See [Application types](#application-types) if you want to register your own types.
+
+### Clojure types
 Some native Clojure types don't have an obvious MessagePack counterpart. We can
 serialize them as Extended types. To enable automatic conversion of these
 types, load the `clojure-extensions` library.
@@ -91,7 +93,7 @@ Without `msgpack.clojure-extensions`:
 ; clojure.core/-cache-protocol-fn (core _deftype.clj:544)
 ```
 
-### Application Extended types:
+### <a name="application-types">Application types</a>
 You can also define your own Extended types with `extend-msgpack`.
 
 ```clojure
