@@ -63,7 +63,7 @@ clojure.lang.Sequential	    | Array
 clojure.lang.IPersistentMap | Map
 msgpack.core.Ext	          | Extended
 
-Unrecognized types produce IllegalArgumentExceptions.  See [Application types](#application-types) if you want to register your own types.
+Serializing a value of unrecognized type will fail with `IllegalArgumentException`.  See [Application types](#application-types) if you want to register your own types.
 
 ### Clojure types
 Some native Clojure types don't have an obvious MessagePack counterpart. We can
