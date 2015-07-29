@@ -45,18 +45,23 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 
 ### Core types:
 
-Clojure			    | MessagePack
+Clojure			                | MessagePack
 ----------------------------|------------
-nil			    | nil
-java.lang.Boolean	    | Boolean
-java.lang.Float		    | Float
-java.lang.Double	    | Float
-java.math.BigDecimal	    | Float
-java.lang.Number	    | Integer
-java.lang.String	    | String
+nil			                    | Nil
+java.lang.Boolean	          | Boolean
+java.lang.Byte	            | Integer
+java.lang.Short	            | Integer
+java.lang.Integer	          | Integer
+java.lang.Long	            | Integer
+java.lang.BigInteger	      | Integer
+clojure.lang.BigInt	        | Integer
+java.lang.Float		          | Float
+java.lang.Double	          | Float
+java.math.BigDecimal	      | Float
+java.lang.String	          | String
 clojure.lang.Sequential	    | Array
 clojure.lang.IPersistentMap | Map
-msgpack.core.Ext	    | Extended
+msgpack.core.Ext	          | Extended
 
 ### Clojure Extended types:
 Some native Clojure types don't have an obvious MessagePack counterpart. We can
