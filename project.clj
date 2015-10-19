@@ -7,4 +7,8 @@
                  [org.clojure/test.check "0.7.0"]]
   :global-vars {*warn-on-reflection* true}
   :scm {:name "git"
-        :url "https://github.com/edma2/clojure-msgpack"})
+        :url "https://github.com/edma2/clojure-msgpack"}
+  :profiles
+  {:non-utf8-encoding
+   {:jvm-opts
+    ["-Dfile.encoding=ISO-8859-1"]}})

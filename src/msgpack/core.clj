@@ -5,6 +5,10 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
+(def ^:private
+  msgpack-charset
+  (Charset/forName "UTF-8"))
+
 (declare pack unpack unpack-stream)
 
 (defprotocol Packable
@@ -108,7 +112,7 @@
   java.lang.String
   (pack-stream
     [str ^java.io.DataOutput s]
-    (cond-let [bytes (.getBytes str (Charset/forName "UTF-8"))
+    (cond-let [bytes (.getBytes str msgpack-charset)
                len (count bytes)]
               (<= len 0x1f)
               (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
@@ -212,6 +216,10 @@
       (.readFully data-input bytes)
       bytes)))
 
+(defn- read-str
+  [n ^java.io.DataInput data-input]
+  (String. ^bytes (read-bytes n data-input) msgpack-charset))
+
 (defmulti refine-ext
   "Refine Extended type to an application-specific type."
   :type)
@@ -260,16 +268,16 @@
             ; str format family
             (= (bit-and 2r11100000 byte) 2r10100000)
             (let [n (bit-and 2r11111 byte)]
-              (String. ^bytes (read-bytes n data-input)))
+              (read-str n data-input))
 
             (= byte 0xd9)
-            (String. ^bytes (read-bytes (read-uint8 data-input) data-input))
+            (read-str (read-uint8 data-input) data-input)
 
             (= byte 0xda)
-            (String. ^bytes (read-bytes (read-uint16 data-input) data-input))
+            (read-str (read-uint16 data-input) data-input)
 
             (= byte 0xdb)
-            (String. ^bytes (read-bytes (read-uint32 data-input) data-input))
+            (read-str (read-uint32 data-input) data-input)
 
             ; bin format family
             (= byte 0xc4)
