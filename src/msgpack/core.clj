@@ -5,7 +5,7 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
-(def ^:private
+(def ^:private ^Charset
   msgpack-charset
   (Charset/forName "UTF-8"))
 
