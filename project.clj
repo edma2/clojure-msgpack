@@ -11,4 +11,6 @@
   :profiles
   {:non-utf8-encoding
    {:jvm-opts
-    ["-Dfile.encoding=ISO-8859-1"]}})
+    ["-Dfile.encoding=ISO-8859-1"]}
+   :eastwood {:plugins [[jonase/eastwood "0.2.3"]]
+              :eastwood {:config-files ["eastwood.clj"]}}})
