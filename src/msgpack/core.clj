@@ -174,14 +174,17 @@
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
 
 ; Array of java.lang.Byte (boxed)
-(extend-type (class (java.lang.reflect.Array/newInstance Byte 0))
-  Packable
-  (pack-stream [bytes ^java.io.DataOutput s] (pack-bytes bytes s)))
+(extend (class (java.lang.reflect.Array/newInstance Byte 0))
+ Packable
+ {:pack-stream
+  (fn ([bytes ^java.io.DataOutput s]
+    (pack-bytes bytes s)))})
 
-; Array of primitive bytes (un-boxed)
-(extend-type (Class/forName "[B")
-  Packable
-  (pack-stream [bytes ^java.io.DataOutput s] (pack-bytes bytes s)))
+(extend (Class/forName "[B")
+ Packable
+ {:pack-stream
+  (fn ([bytes ^java.io.DataOutput s]
+    (pack-bytes bytes s)))})
 
 (defn pack [obj]
   (let [output-stream (ByteArrayOutputStream.)
