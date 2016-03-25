@@ -12,6 +12,6 @@
    {:jvm-opts
     ["-Dfile.encoding=ISO-8859-1"]}
    :eastwood {:plugins [[jonase/eastwood "0.2.3"]]
-              :dependencies [[org.clojure/test.check "0.7.0"]]
+              :dependencies [[org.clojure/test.check "0.9.0"]]
               :eastwood {:config-files ["eastwood.clj"]}}
-   :test {:dependencies [[org.clojure/test.check "0.7.0"]]}})
+   :test {:dependencies [[org.clojure/test.check "0.9.0"]]}})
