@@ -219,10 +219,17 @@
 (deftest compat-test
   (testing "bin 8"
     (is (= (seq (msgpack.compat/pack (byte-array 0))) (unsigned-bytes [0xa0])))
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array [0x80]))) (unsigned-bytes [0xa1 0x80 ])))
+    (is (= (seq (msgpack.compat/pack (unsigned-byte-array [0x80]))) (unsigned-bytes [0xa1 0x80])))
     (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 32 0x80)))) (unsigned-bytes (concat [0xda 0x0 0x20] (repeat 32 0x80)))))
     (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 255 0x80)))) (unsigned-bytes (concat [0xda 0x0 0xff] (repeat 255 0x80))))))
   (testing "bin 16"
     (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 256 0x80)))) (unsigned-bytes (concat [0xda 0x1 0x0] (repeat 256 0x80))))))
   (testing "bin 32"
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 65536 0x80)))) (unsigned-bytes (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))))
+    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 65536 0x80)))) (unsigned-bytes (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 0x80))))))
+  (testing "str 8"
+    (is (= (seq (msgpack.compat/pack (fill-string 32 \b)))
+           (unsigned-bytes (concat [0xda 0x0 0x20] (repeat 32 (byte \b))))))
+    (is (= (seq (msgpack.compat/pack (fill-string 100 \c)))
+           (unsigned-bytes (concat [0xda 0x0 0x64] (repeat 100 (byte \c))))))
+    (is (= (seq (msgpack.compat/pack (fill-string 255 \d)))
+           (unsigned-bytes (concat [0xda 0x0 0xff] (repeat 255 (byte \d))))))))
