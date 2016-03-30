@@ -5,6 +5,8 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
+(def ^:private ^:dynamic *compatibility-mode* false)
+
 (def ^:private ^Charset
   msgpack-charset
   (Charset/forName "UTF-8"))
@@ -35,6 +37,27 @@
 
             (<= len 0xffffffff)
             (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
+            
+(defn- pack-str
+  [str-or-bytes ^java.io.DataOutput s]
+  (cond-let [^bytes bytes (if (string? str-or-bytes)
+                            (.getBytes ^String str-or-bytes msgpack-charset)
+                            str-or-bytes)
+             len (count bytes)]
+            (<= len 0x1f)
+            (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
+
+            (and (<= len 0xff) *compatibility-mode*)
+            (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
+
+            (<= len 0xff)
+            (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes))
+
+            (<= len 0xffff)
+            (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
+
+            (<= len 0xffffffff)
+            (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
 (defn- pack-int
   "Pack integer using the most compact representation"
@@ -112,19 +135,7 @@
   java.lang.String
   (pack-stream
     [str ^java.io.DataOutput s]
-    (cond-let [bytes (.getBytes str msgpack-charset)
-               len (count bytes)]
-              (<= len 0x1f)
-              (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
-
-              (<= len 0xff)
-              (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes))
-
-              (<= len 0xffff)
-              (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
-
-              (<= len 0xffffffff)
-              (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
+    (pack-str str s))
 
   Ext
   (pack-stream
@@ -178,13 +189,17 @@
  Packable
  {:pack-stream
   (fn ([bytes ^java.io.DataOutput s]
-    (pack-bytes bytes s)))})
+    (if *compatibility-mode*
+      (pack-str bytes s)
+      (pack-bytes bytes s))))})
 
 (extend (Class/forName "[B")
  Packable
  {:pack-stream
   (fn ([bytes ^java.io.DataOutput s]
-    (pack-bytes bytes s)))})
+    (if *compatibility-mode*
+      (pack-str bytes s)
+      (pack-bytes bytes s))))})
 
 (defn pack [obj]
   (let [output-stream (ByteArrayOutputStream.)
