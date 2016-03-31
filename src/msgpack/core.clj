@@ -13,6 +13,8 @@
 (defn set-compatibility-mode
   ([] (set-compatibility-mode true))
   ([value] (swap! compatibility-mode (fn [_] value))))
+  
+(defn get-compatibility-mode [] @compatibility-mode)
 
 (def ^:private ^Charset
   msgpack-charset
