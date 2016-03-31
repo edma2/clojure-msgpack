@@ -5,7 +5,14 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
-(def ^:private ^:dynamic *compatibility-mode* false)
+(def ^:private compatibility-mode
+  (let [prop (System/getProperty "clojure.msgpack.compat")
+        value (Boolean/valueOf prop)]
+    (atom value)))
+
+(defn set-compatibility-mode
+  ([] (set-compatibility-mode true))
+  ([value] (swap! compatibility-mode (fn [_] value))))
 
 (def ^:private ^Charset
   msgpack-charset
@@ -26,38 +33,36 @@
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
-(defn- pack-bytes
+(defn- pack-str
   [^bytes bytes ^java.io.DataOutput s]
   (cond-let [len (count bytes)]
-            (<= len 0xff)
-            (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
-
-            (<= len 0xffff)
-            (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
-
-            (<= len 0xffffffff)
-            (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
-            
-(defn- pack-str
-  [str-or-bytes ^java.io.DataOutput s]
-  (cond-let [^bytes bytes (if (string? str-or-bytes)
-                            (.getBytes ^String str-or-bytes msgpack-charset)
-                            str-or-bytes)
-             len (count bytes)]
             (<= len 0x1f)
             (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
 
-            (and (<= len 0xff) *compatibility-mode*)
-            (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
-
             (<= len 0xff)
-            (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes))
-
+            (if @compatibility-mode
+              (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
+              (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes)))
+            
             (<= len 0xffff)
             (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
 
             (<= len 0xffffffff)
             (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
+
+(defn- pack-bytes
+  [^bytes bytes ^java.io.DataOutput s]
+  (if @compatibility-mode
+    (pack-str bytes s)
+    (cond-let [len (count bytes)]
+              (<= len 0xff)
+              (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
+
+              (<= len 0xffff)
+              (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
+
+              (<= len 0xffffffff)
+              (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes)))))
 
 (defn- pack-int
   "Pack integer using the most compact representation"
@@ -135,7 +140,7 @@
   java.lang.String
   (pack-stream
     [str ^java.io.DataOutput s]
-    (pack-str str s))
+    (pack-str (.getBytes ^String str msgpack-charset) s))
 
   Ext
   (pack-stream
@@ -186,20 +191,16 @@
 
 ; Array of java.lang.Byte (boxed)
 (extend (class (java.lang.reflect.Array/newInstance Byte 0))
- Packable
- {:pack-stream
-  (fn ([bytes ^java.io.DataOutput s]
-    (if *compatibility-mode*
-      (pack-str bytes s)
-      (pack-bytes bytes s))))})
+  Packable
+  {:pack-stream
+   (fn ([bytes ^java.io.DataOutput s]
+        (pack-bytes bytes s)))})
 
 (extend (Class/forName "[B")
- Packable
- {:pack-stream
-  (fn ([bytes ^java.io.DataOutput s]
-    (if *compatibility-mode*
-      (pack-str bytes s)
-      (pack-bytes bytes s))))})
+  Packable
+  {:pack-stream
+   (fn ([bytes ^java.io.DataOutput s]
+        (pack-bytes bytes s)))})
 
 (defn pack [obj]
   (let [output-stream (ByteArrayOutputStream.)

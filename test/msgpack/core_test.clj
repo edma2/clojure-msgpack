@@ -2,8 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojure.walk :refer [postwalk]]
             [msgpack.core :as msg]
-            msgpack.clojure-extensions
-            msgpack.compat))
+            msgpack.clojure-extensions))
 
 (defn- byte-array? [v]
   (instance? (Class/forName "[B") v))
@@ -215,20 +214,3 @@
   (testing "map 16"
     (round-trip (zipmap (range 0 16) (repeat 16 5))
                 [0xde 0x0 0x10 0x0 0x5 0x7 0x5 0x1 0x5 0x4 0x5 0xf 0x5 0xd 0x5 0x6 0x5 0x3 0x5 0xc 0x5 0x2 0x5 0xb 0x5 0x9 0x5 0x5 0x5 0xe 0x5 0xa 0x5 0x8 0x5])))
-
-(deftest raw-test
-  (testing "fix raw"
-    (is (= (seq (msgpack.compat/pack (byte-array 0))) (unsigned-bytes [0xa0])))
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array [0x80]))) (unsigned-bytes [0xa1 0x80]))))
-  (testing "raw 16"
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 32 0x80)))) (unsigned-bytes (concat [0xda 0x0 0x20] (repeat 32 0x80)))))
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 255 0x80)))) (unsigned-bytes (concat [0xda 0x0 0xff] (repeat 255 0x80)))))
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 256 0x80)))) (unsigned-bytes (concat [0xda 0x1 0x0] (repeat 256 0x80)))))
-    (is (= (seq (msgpack.compat/pack (fill-string 32 \b)))
-           (unsigned-bytes (concat [0xda 0x0 0x20] (repeat 32 (byte \b))))))
-    (is (= (seq (msgpack.compat/pack (fill-string 100 \c)))
-           (unsigned-bytes (concat [0xda 0x0 0x64] (repeat 100 (byte \c))))))
-    (is (= (seq (msgpack.compat/pack (fill-string 255 \d)))
-           (unsigned-bytes (concat [0xda 0x0 0xff] (repeat 255 (byte \d)))))))
-  (testing "raw 32"
-    (is (= (seq (msgpack.compat/pack (unsigned-byte-array (repeat 65536 0x80)))) (unsigned-bytes (concat [0xdb 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))))
