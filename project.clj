@@ -11,6 +11,8 @@
   {:non-utf8-encoding
    {:jvm-opts
     ["-Dfile.encoding=ISO-8859-1"]}
+   :compat
+   {:jvm-opts ["-Dclojure.msgpack.compat=true"]}
    :eastwood {:plugins [[jonase/eastwood "0.2.3"]]
               :dependencies [[org.clojure/test.check "0.9.0"]]
               :eastwood {:config-files ["eastwood.clj"]}}
