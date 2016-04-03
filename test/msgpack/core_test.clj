@@ -36,17 +36,11 @@
 (defn- ext [type bytes]
   (msg/->Ext type (unsigned-byte-array bytes)))
 
-(defn- round-trip-helper
-  ([obj expected-bytes] (round-trip-helper obj expected-bytes expected-bytes))
-  ([obj expected-bytes expected-compat-bytes]
-   `(let [obj# ~obj
-          expected-bytes# (unsigned-bytes (if (msg/get-compatibility-mode)
-                                            ~expected-compat-bytes 
-                                            ~expected-bytes))]
-      (is (= expected-bytes# (seq (msg/pack obj#))))
-      (is (= (normalize obj#) (normalize (msg/unpack expected-bytes#)))))))
-
-(defmacro round-trip [& args] (apply round-trip-helper args))
+(defmacro round-trip [obj expected-bytes]
+  `(let [obj# ~obj
+         expected-bytes# (unsigned-bytes ~expected-bytes)]
+     (is (= expected-bytes# (seq (msg/pack obj#))))
+     (is (= (normalize obj#) (normalize (msg/unpack expected-bytes#))))))
 
 (deftest nil-test
   (testing "nil"
