@@ -8,7 +8,8 @@
 (defn- not-nan [x]
   (not (Double/isNaN x)))
 
-(defn- pack-and-unpack [x] (msg/unpack (msg/pack x)))
+(defn- pack-and-unpack [x]
+  (msg/unpack (msg/pack x)))
 
 (defspec ints-round-trip 100
   (prop/for-all [x gen/int]
@@ -28,6 +29,12 @@
   (prop/for-all [x gen/string]
                 (= (pack-and-unpack x) x)))
 
-(defspec vectors-round-trip 100
-  (prop/for-all [x (gen/vector (gen/map gen/int gen/string))]
+(def vector-of-maps (gen/vector (gen/map gen/int gen/string)))
+
+(defspec vectors-round-trip 20
+  (prop/for-all [x vector-of-maps]
+                (= (pack-and-unpack x) x)))
+
+(defspec maps-round-trip 20
+  (prop/for-all [x (gen/map gen/string vector-of-maps)]
                 (= (pack-and-unpack x) x)))
