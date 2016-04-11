@@ -37,7 +37,7 @@
             (if raw
               (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
               (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes)))
-            
+
             (<= len 0xffff)
             (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
 
@@ -126,7 +126,7 @@
   java.lang.Double
   (pack-stream [d ^java.io.DataOutput s _]
     (do (.writeByte s 0xcb) (.writeDouble s d)))
-  
+
   java.math.BigDecimal
   (pack-stream [d ^java.io.DataOutput s opts]
     (pack-stream (.doubleValue d) s opts))
