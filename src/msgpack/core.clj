@@ -5,17 +5,6 @@
            java.io.ByteArrayInputStream
            java.nio.charset.Charset))
 
-(def ^:private compatibility-mode
-  (let [prop (System/getProperty "clojure.msgpack.compat")
-        value (Boolean/valueOf prop)]
-    (atom value)))
-
-(defn set-compatibility-mode
-  ([] (set-compatibility-mode true))
-  ([value] (swap! compatibility-mode (fn [_] value))))
-  
-(defn get-compatibility-mode [] @compatibility-mode)
-
 (def ^:private ^Charset
   msgpack-charset
   (Charset/forName "UTF-8"))
@@ -24,7 +13,10 @@
 
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
-  (pack-stream [this data-output]))
+  (pack-stream [this data-output opts]))
+
+(defn pack-stream [this data-output]
+  (pack-stream this data-output nil))
 
 ;; MessagePack allows applications to define application-specific types using
 ;; the Extended type. Extended type consists of an integer and a byte array
@@ -36,13 +28,13 @@
   `(let ~bindings (cond ~@clauses)))
 
 (defn- pack-str
-  [^bytes bytes ^java.io.DataOutput s]
+  [^bytes bytes ^java.io.DataOutput s {:keys [raw]}]
   (cond-let [len (count bytes)]
             (<= len 0x1f)
             (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
 
             (<= len 0xff)
-            (if @compatibility-mode
+            (if raw
               (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
               (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes)))
             
@@ -53,9 +45,9 @@
             (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
 (defn- pack-bytes
-  [^bytes bytes ^java.io.DataOutput s]
-  (if @compatibility-mode
-    (pack-str bytes s)
+  [^bytes bytes ^java.io.DataOutput s {:keys [raw] :as opts}]
+  (if raw
+    (pack-str bytes s opts)
     (cond-let [len (count bytes)]
               (<= len 0xff)
               (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
@@ -93,60 +85,60 @@
     :else (throw (IllegalArgumentException. (str "Integer value out of bounds: " n)))))
 
 (defn- pack-coll
-  [coll ^java.io.DataOutput s]
-  (doseq [item coll] (pack-stream item s)))
+  [coll ^java.io.DataOutput s opts]
+  (doseq [item coll] (pack-stream item s opts)))
 
 (extend-protocol Packable
   nil
   (pack-stream
-    [_ ^java.io.DataOutput s]
+    [_ ^java.io.DataOutput s _]
     (.writeByte s 0xc0))
 
   java.lang.Boolean
   (pack-stream
-    [bool ^java.io.DataOutput s]
+    [bool ^java.io.DataOutput s _]
     (if bool
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
   java.lang.Byte
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Short
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Integer
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Long
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.math.BigInteger
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   clojure.lang.BigInt
-  (pack-stream [n ^java.io.DataOutput s] (pack-int n s))
+  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Float
-  (pack-stream [f ^java.io.DataOutput s]
+  (pack-stream [f ^java.io.DataOutput s _]
     (do (.writeByte s 0xca) (.writeFloat s f)))
 
   java.lang.Double
-  (pack-stream [d ^java.io.DataOutput s]
+  (pack-stream [d ^java.io.DataOutput s _]
     (do (.writeByte s 0xcb) (.writeDouble s d)))
   
   java.math.BigDecimal
-  (pack-stream [d ^java.io.DataOutput s]
-    (pack-stream (.doubleValue d) s))
+  (pack-stream [d ^java.io.DataOutput s opts]
+    (pack-stream (.doubleValue d) s opts))
 
   java.lang.String
   (pack-stream
-    [str ^java.io.DataOutput s]
-    (pack-str (.getBytes ^String str msgpack-charset) s))
+    [str ^java.io.DataOutput s opts]
+    (pack-str (.getBytes ^String str msgpack-charset) s opts))
 
   Ext
   (pack-stream
-    [e ^java.io.DataOutput s]
+    [e ^java.io.DataOutput s _]
     (let [type (:type e)
           ^bytes data (:data e)
           len (count data)]
@@ -164,29 +156,29 @@
         (.write s data))))
 
   clojure.lang.Sequential
-  (pack-stream [seq ^java.io.DataOutput s]
+  (pack-stream [seq ^java.io.DataOutput s opts]
     (cond-let [len (count seq)]
               (<= len 0xf)
-              (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll seq s))
+              (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll seq s opts))
 
               (<= len 0xffff)
-              (do (.writeByte s 0xdc) (.writeShort s len) (pack-coll seq s))
+              (do (.writeByte s 0xdc) (.writeShort s len) (pack-coll seq s opts))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s))))
+              (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s opts))))
 
   clojure.lang.IPersistentMap
-  (pack-stream [map ^java.io.DataOutput s]
+  (pack-stream [map ^java.io.DataOutput s opts]
     (cond-let [len (count map)
                pairs (interleave (keys map) (vals map))]
               (<= len 0xf)
-              (do (.writeByte s (bit-or 2r10000000 len)) (pack-coll pairs s))
+              (do (.writeByte s (bit-or 2r10000000 len)) (pack-coll pairs s opts))
 
               (<= len 0xffff)
-              (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s))
+              (do (.writeByte s 0xde) (.writeShort s len) (pack-coll pairs s opts))
 
               (<= len 0xffffffff)
-              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s)))))
+              (do (.writeByte s 0xdf) (.writeInt s len) (pack-coll pairs s opts)))))
 
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
@@ -195,21 +187,23 @@
 (extend (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
   {:pack-stream
-   (fn ([bytes ^java.io.DataOutput s]
-        (pack-bytes bytes s)))})
+   (fn ([bytes ^java.io.DataOutput s opts]
+        (pack-bytes bytes s opts)))})
 
 (extend (Class/forName "[B")
   Packable
   {:pack-stream
-   (fn ([bytes ^java.io.DataOutput s]
-        (pack-bytes bytes s)))})
+   (fn ([bytes ^java.io.DataOutput s opts]
+        (pack-bytes bytes s opts)))})
 
-(defn pack [obj]
-  (let [output-stream (ByteArrayOutputStream.)
-        data-output (DataOutputStream. output-stream)]
-    (do
-      (pack-stream obj data-output)
-      (.toByteArray output-stream))))
+(defn pack
+  ([obj] (pack obj nil))
+  ([obj opts]
+   (let [output-stream (ByteArrayOutputStream.)
+         data-output (DataOutputStream. output-stream)]
+     (do
+       (pack-stream obj data-output opts)
+       (.toByteArray output-stream)))))
 
 (defn- read-uint8
   [^java.io.DataInput data-input]
