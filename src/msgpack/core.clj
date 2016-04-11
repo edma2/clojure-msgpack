@@ -248,9 +248,9 @@
 
 (defn- read-str
   [n ^java.io.DataInput data-input {:keys [raw]}]
-  (if raw
-    (read-bytes n data-input)
-    (String. ^bytes (read-bytes n data-input) msgpack-charset)))
+  (let [bytes (read-bytes n data-input)]
+    (if raw bytes
+        (String. ^bytes bytes msgpack-charset))))
 
 (defmulti refine-ext
   "Refine Extended type to an application-specific type."
