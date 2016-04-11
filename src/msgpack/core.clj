@@ -27,16 +27,26 @@
 (defmacro cond-let [bindings & clauses]
   `(let ~bindings (cond ~@clauses)))
 
+(defn- pack-raw
+  [^bytes bytes ^java.io.DataOutput s]
+  (cond-let [len (count bytes)]
+            (<= len 0x1f)
+            (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
+
+            (<= len 0xffff)
+            (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
+
+            (<= len 0xffffffff)
+            (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
+
 (defn- pack-str
-  [^bytes bytes ^java.io.DataOutput s {:keys [raw]}]
+  [^bytes bytes ^java.io.DataOutput s]
   (cond-let [len (count bytes)]
             (<= len 0x1f)
             (do (.writeByte s (bit-or 2r10100000 len)) (.write s bytes))
 
             (<= len 0xff)
-            (if raw
-              (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
-              (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes)))
+            (do (.writeByte s 0xd9) (.writeByte s len) (.write s bytes))
 
             (<= len 0xffff)
             (do (.writeByte s 0xda) (.writeShort s len) (.write s bytes))
@@ -45,18 +55,16 @@
             (do (.writeByte s 0xdb) (.writeInt s len) (.write s bytes))))
 
 (defn- pack-bytes
-  [^bytes bytes ^java.io.DataOutput s {:keys [raw] :as opts}]
-  (if raw
-    (pack-str bytes s opts)
-    (cond-let [len (count bytes)]
-              (<= len 0xff)
-              (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
+  [^bytes bytes ^java.io.DataOutput s]
+  (cond-let [len (count bytes)]
+            (<= len 0xff)
+            (do (.writeByte s 0xc4) (.writeByte s len) (.write s bytes))
 
-              (<= len 0xffff)
-              (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
+            (<= len 0xffff)
+            (do (.writeByte s 0xc5) (.writeShort s len) (.write s bytes))
 
-              (<= len 0xffffffff)
-              (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes)))))
+            (<= len 0xffffffff)
+            (do (.writeByte s 0xc6) (.writeInt s len) (.write s bytes))))
 
 (defn- pack-int
   "Pack integer using the most compact representation"
@@ -133,8 +141,11 @@
 
   java.lang.String
   (pack-stream
-    [str ^java.io.DataOutput s opts]
-    (pack-str (.getBytes ^String str msgpack-charset) s opts))
+    [str ^java.io.DataOutput s {:keys [raw]}]
+    (let [bytes (.getBytes ^String str msgpack-charset)]
+      (if raw 
+        (pack-raw bytes s)
+        (pack-str bytes s))))
 
   Ext
   (pack-stream
@@ -187,14 +198,18 @@
 (extend (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
   {:pack-stream
-   (fn ([bytes ^java.io.DataOutput s opts]
-        (pack-bytes bytes s opts)))})
+   (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
+     (if raw 
+       (pack-raw bytes s)
+       (pack-bytes bytes s)))})
 
 (extend (Class/forName "[B")
   Packable
   {:pack-stream
-   (fn ([bytes ^java.io.DataOutput s opts]
-        (pack-bytes bytes s opts)))})
+   (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
+     (if raw 
+       (pack-raw bytes s)
+       (pack-bytes bytes s)))})
 
 (defn pack
   ([obj] (pack obj nil))
@@ -232,8 +247,10 @@
       bytes)))
 
 (defn- read-str
-  [n ^java.io.DataInput data-input]
-  (String. ^bytes (read-bytes n data-input) msgpack-charset))
+  [n ^java.io.DataInput data-input {:keys [raw]}]
+  (if raw
+    (read-bytes n data-input)
+    (String. ^bytes (read-bytes n data-input) msgpack-charset)))
 
 (defmulti refine-ext
   "Refine Extended type to an application-specific type."
@@ -251,94 +268,96 @@
 (defn- unpack-map [n ^java.io.DataInput data-input]
   (apply hash-map (unpack-n (* 2 n) data-input)))
 
-(defn unpack-stream [^java.io.DataInput data-input]
-  (cond-let [byte (.readUnsignedByte data-input)]
-            ; nil format family
-            (= byte 0xc0) nil
+(defn unpack-stream
+  ([^java.io.DataInput data-input] (unpack-stream data-input nil))
+  ([^java.io.DataInput data-input opts]
+   (cond-let [byte (.readUnsignedByte data-input)]
+             ; nil format family
+             (= byte 0xc0) nil
 
-            ; bool format family
-            (= byte 0xc2) false
-            (= byte 0xc3) true
+             ; bool format family
+             (= byte 0xc2) false
+             (= byte 0xc3) true
 
-            ; int format family
-            (= (bit-and 2r11100000 byte) 2r11100000)
-            (unchecked-byte byte)
+             ; int format family
+             (= (bit-and 2r11100000 byte) 2r11100000)
+             (unchecked-byte byte)
 
-            (= (bit-and 2r10000000 byte) 0)
-            (unchecked-byte byte)
+             (= (bit-and 2r10000000 byte) 0)
+             (unchecked-byte byte)
 
-            (= byte 0xcc) (read-uint8 data-input)
-            (= byte 0xcd) (read-uint16 data-input)
-            (= byte 0xce) (read-uint32 data-input)
-            (= byte 0xcf) (read-uint64 data-input)
-            (= byte 0xd0) (.readByte data-input)
-            (= byte 0xd1) (.readShort data-input)
-            (= byte 0xd2) (.readInt data-input)
-            (= byte 0xd3) (.readLong data-input)
+             (= byte 0xcc) (read-uint8 data-input)
+             (= byte 0xcd) (read-uint16 data-input)
+             (= byte 0xce) (read-uint32 data-input)
+             (= byte 0xcf) (read-uint64 data-input)
+             (= byte 0xd0) (.readByte data-input)
+             (= byte 0xd1) (.readShort data-input)
+             (= byte 0xd2) (.readInt data-input)
+             (= byte 0xd3) (.readLong data-input)
 
-            ; float format family
-            (= byte 0xca) (.readFloat data-input)
-            (= byte 0xcb) (.readDouble data-input)
+             ; float format family
+             (= byte 0xca) (.readFloat data-input)
+             (= byte 0xcb) (.readDouble data-input)
 
-            ; str format family
-            (= (bit-and 2r11100000 byte) 2r10100000)
-            (let [n (bit-and 2r11111 byte)]
-              (read-str n data-input))
+             ; str format family
+             (= (bit-and 2r11100000 byte) 2r10100000)
+             (let [n (bit-and 2r11111 byte)]
+               (read-str n data-input opts))
 
-            (= byte 0xd9)
-            (read-str (read-uint8 data-input) data-input)
+             (= byte 0xd9)
+             (read-str (read-uint8 data-input) data-input opts)
 
-            (= byte 0xda)
-            (read-str (read-uint16 data-input) data-input)
+             (= byte 0xda)
+             (read-str (read-uint16 data-input) data-input opts)
 
-            (= byte 0xdb)
-            (read-str (read-uint32 data-input) data-input)
+             (= byte 0xdb)
+             (read-str (read-uint32 data-input) data-input opts)
 
-            ; bin format family
-            (= byte 0xc4)
-            (read-bytes (read-uint8 data-input) data-input)
+             ; bin format family
+             (= byte 0xc4)
+             (read-bytes (read-uint8 data-input) data-input)
 
-            (= byte 0xc5)
-            (read-bytes (read-uint16 data-input) data-input)
+             (= byte 0xc5)
+             (read-bytes (read-uint16 data-input) data-input)
 
-            (= byte 0xc6)
-            (read-bytes (read-uint32 data-input) data-input)
+             (= byte 0xc6)
+             (read-bytes (read-uint32 data-input) data-input)
 
-            ; ext format family
-            (= byte 0xd4) (unpack-ext 1 data-input)
-            (= byte 0xd5) (unpack-ext 2 data-input)
-            (= byte 0xd6) (unpack-ext 4 data-input)
-            (= byte 0xd7) (unpack-ext 8 data-input)
-            (= byte 0xd8) (unpack-ext 16 data-input)
+             ; ext format family
+             (= byte 0xd4) (unpack-ext 1 data-input)
+             (= byte 0xd5) (unpack-ext 2 data-input)
+             (= byte 0xd6) (unpack-ext 4 data-input)
+             (= byte 0xd7) (unpack-ext 8 data-input)
+             (= byte 0xd8) (unpack-ext 16 data-input)
 
-            (= byte 0xc7)
-            (unpack-ext (read-uint8 data-input) data-input)
+             (= byte 0xc7)
+             (unpack-ext (read-uint8 data-input) data-input)
 
-            (= byte 0xc8)
-            (unpack-ext (read-uint16 data-input) data-input)
+             (= byte 0xc8)
+             (unpack-ext (read-uint16 data-input) data-input)
 
-            (= byte 0xc9)
-            (unpack-ext (read-uint32 data-input) data-input)
+             (= byte 0xc9)
+             (unpack-ext (read-uint32 data-input) data-input)
 
-            ; array format family
-            (= (bit-and 2r11110000 byte) 2r10010000)
-            (unpack-n (bit-and 2r1111 byte) data-input)
+             ; array format family
+             (= (bit-and 2r11110000 byte) 2r10010000)
+             (unpack-n (bit-and 2r1111 byte) data-input)
 
-            (= byte 0xdc)
-            (unpack-n (read-uint16 data-input) data-input)
+             (= byte 0xdc)
+             (unpack-n (read-uint16 data-input) data-input)
 
-            (= byte 0xdd)
-            (unpack-n (read-uint32 data-input) data-input)
+             (= byte 0xdd)
+             (unpack-n (read-uint32 data-input) data-input)
 
-            ; map format family
-            (= (bit-and 2r11110000 byte) 2r10000000)
-            (unpack-map (bit-and 2r1111 byte) data-input)
+             ; map format family
+             (= (bit-and 2r11110000 byte) 2r10000000)
+             (unpack-map (bit-and 2r1111 byte) data-input)
 
-            (= byte 0xde)
-            (unpack-map (read-uint16 data-input) data-input)
+             (= byte 0xde)
+             (unpack-map (read-uint16 data-input) data-input)
 
-            (= byte 0xdf)
-            (unpack-map (read-uint32 data-input) data-input)))
+             (= byte 0xdf)
+             (unpack-map (read-uint32 data-input) data-input))))
 
 (defn- to-byte-array
   [bytes]
@@ -348,9 +367,10 @@
 
 (defn unpack
   "Unpack bytes as MessagePack object."
-  [bytes]
-  (-> bytes
-      to-byte-array
-      ByteArrayInputStream.
-      DataInputStream.
-      unpack-stream))
+  ([bytes] (unpack bytes nil))
+  ([bytes opts]
+   (let [data-input (-> bytes
+                        to-byte-array
+                        ByteArrayInputStream.
+                        DataInputStream.)]
+     (unpack-stream data-input opts))))
