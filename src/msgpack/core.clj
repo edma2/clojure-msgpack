@@ -262,11 +262,11 @@
   (refine-ext
    (->Ext (.readByte data-input) (read-bytes n data-input))))
 
-(defn- unpack-n [n ^java.io.DataInput data-input]
-  (doall (for [_ (range n)] (unpack-stream data-input))))
+(defn- unpack-n [n ^java.io.DataInput data-input opts]
+  (doall (for [_ (range n)] (unpack-stream data-input opts))))
 
-(defn- unpack-map [n ^java.io.DataInput data-input]
-  (apply hash-map (unpack-n (* 2 n) data-input)))
+(defn- unpack-map [n ^java.io.DataInput data-input opts]
+  (apply hash-map (unpack-n (* 2 n) data-input opts)))
 
 (defn unpack-stream
   ([^java.io.DataInput data-input] (unpack-stream data-input nil))
@@ -341,23 +341,23 @@
 
              ; array format family
              (= (bit-and 2r11110000 byte) 2r10010000)
-             (unpack-n (bit-and 2r1111 byte) data-input)
+             (unpack-n (bit-and 2r1111 byte) data-input opts)
 
              (= byte 0xdc)
-             (unpack-n (read-uint16 data-input) data-input)
+             (unpack-n (read-uint16 data-input) data-input opts)
 
              (= byte 0xdd)
-             (unpack-n (read-uint32 data-input) data-input)
+             (unpack-n (read-uint32 data-input) data-input opts)
 
              ; map format family
              (= (bit-and 2r11110000 byte) 2r10000000)
-             (unpack-map (bit-and 2r1111 byte) data-input)
+             (unpack-map (bit-and 2r1111 byte) data-input opts)
 
              (= byte 0xde)
-             (unpack-map (read-uint16 data-input) data-input)
+             (unpack-map (read-uint16 data-input) data-input opts)
 
              (= byte 0xdf)
-             (unpack-map (read-uint32 data-input) data-input))))
+             (unpack-map (read-uint32 data-input) data-input opts))))
 
 (defn- to-byte-array
   [bytes]
