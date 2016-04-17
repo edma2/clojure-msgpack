@@ -46,8 +46,8 @@
   `(let [obj# ~obj
          packed-bytes# (unsigned-bytes ~packed-bytes)
          unpacked-obj# ~unpacked-obj]
-     (is (= packed-bytes# (seq (msg/pack obj# {:raw true}))))
-     (is (= (normalize unpacked-obj#) (normalize (msg/unpack packed-bytes# {:raw true}))))))
+     (is (= packed-bytes# (seq (msg/pack obj# {:compatibility-mode true}))))
+     (is (= (normalize unpacked-obj#) (normalize (msg/unpack packed-bytes# {:compatibility-mode true}))))))
 
 (deftest nil-test
   (testing "nil"
@@ -218,8 +218,8 @@
 (deftest map-test
   (testing "fixmap"
     (round-trip {} [0x80])
-    (round-trip-raw {(byte-array 0) [{"key" (byte-array 0)}]} 
-                    [0x81 0xa0 0x91 0x81 0xa3 0x6b 0x65 0x79 0xa0] 
+    (round-trip-raw {(byte-array 0) [{"key" (byte-array 0)}]}
+                    [0x81 0xa0 0x91 0x81 0xa3 0x6b 0x65 0x79 0xa0]
                     {nil [{(.getBytes "key") nil}]})
     (round-trip {1 true 2 "abc" 3 (unsigned-byte-array [0x80])}
                 [0x83 0x01 0xc3 0x02 0xa3 0x61 0x62 0x63 0x03 0xc4 0x01 0x80])

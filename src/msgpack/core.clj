@@ -142,9 +142,9 @@
 
   java.lang.String
   (packable-pack
-    [str ^java.io.DataOutput s {:keys [raw]}]
+    [str ^java.io.DataOutput s {:keys [compatibility-mode]}]
     (let [bytes (.getBytes ^String str msgpack-charset)]
-      (if raw
+      (if compatibility-mode
         (pack-raw bytes s)
         (pack-str bytes s))))
 
@@ -199,16 +199,16 @@
 (extend (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
   {:packable-pack
-   (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
-     (if raw
+   (fn [bytes ^java.io.DataOutput s {:keys [compatibility-mode]}]
+     (if compatibility-mode
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
 (extend (Class/forName "[B")
   Packable
   {:packable-pack
-   (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
-     (if raw
+   (fn [bytes ^java.io.DataOutput s {:keys [compatibility-mode]}]
+     (if compatibility-mode
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
@@ -248,9 +248,9 @@
       bytes)))
 
 (defn- read-str
-  [n ^java.io.DataInput data-input {:keys [raw]}]
+  [n ^java.io.DataInput data-input {:keys [compatibility-mode]}]
   (let [bytes (read-bytes n data-input)]
-    (if raw bytes
+    (if compatibility-mode bytes
         (String. ^bytes bytes msgpack-charset))))
 
 (defmulti refine-ext
