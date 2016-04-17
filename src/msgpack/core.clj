@@ -189,8 +189,14 @@
 ; Note: the extensions below are not in extend-protocol above because of
 ; a Clojure bug. See http://dev.clojure.org/jira/browse/CLJ-1381
 
+(def ^:private class-of-byte-array
+  (class (java.lang.reflect.Array/newInstance Byte 0)))
+
+(def ^:private class-of-primitive-byte-array
+  (Class/forName "[B"))
+
 ; Array of java.lang.Byte (boxed)
-(extend (class (java.lang.reflect.Array/newInstance Byte 0))
+(extend class-of-byte-array
   Packable
   {:packable-pack
    (fn [bytes ^java.io.DataOutput s {:keys [compatibility-mode]}]
@@ -198,7 +204,7 @@
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
-(extend (Class/forName "[B")
+(extend class-of-primitive-byte-array
   Packable
   {:packable-pack
    (fn [bytes ^java.io.DataOutput s {:keys [compatibility-mode]}]
