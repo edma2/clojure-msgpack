@@ -111,5 +111,19 @@ You can also define your own Extended types with `extend-msgpack`.
 ; => (#user.Person{:name "bob"} 5 "test")
 ```
 
+### Options
+All pack and unpack functions take an optional map of options:
+* `:compatibility-mode`
+  Serialize/deserialize strings and bytes using the raw-type defined here:
+  https://github.com/msgpack/msgpack/blob/master/spec-old.md
+
+  Note: No error is thrown if an unpacked value is reserved under the old spec
+  but defined under the new spec. We always deserialize something if we can
+  regardless of `compatibility-mode`.
+
+```clojure
+(msg/pack (byte-array (byte 9)) {:compatibility-mode true})
+```
+
 ## License
 clojure-msgpack is MIT licensed. See the included LICENSE file for more details.

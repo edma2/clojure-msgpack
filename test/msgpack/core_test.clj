@@ -42,6 +42,13 @@
      (is (= expected-bytes# (seq (msg/pack obj#))))
      (is (= (normalize obj#) (normalize (msg/unpack expected-bytes#))))))
 
+(defmacro round-trip-raw [obj packed-bytes unpacked-obj]
+  `(let [obj# ~obj
+         packed-bytes# (unsigned-bytes ~packed-bytes)
+         unpacked-obj# ~unpacked-obj]
+     (is (= packed-bytes# (seq (msg/pack obj# {:compatibility-mode true}))))
+     (is (= (normalize unpacked-obj#) (normalize (msg/unpack packed-bytes# {:compatibility-mode true}))))))
+
 (deftest nil-test
   (testing "nil"
     (round-trip nil [0xc0])))
@@ -119,6 +126,10 @@
   (testing "str 8"
     (round-trip (fill-string 32 \b)
                 (concat [0xd9 0x20] (repeat 32 (byte \b))))
+    (round-trip-raw
+     (fill-string 32 \b)
+     (concat [0xda 0x00 0x20] (repeat 32 (byte \b)))
+     (unsigned-byte-array (repeat 32 (byte \b))))
     (round-trip (fill-string 100 \c)
                 (concat [0xd9 0x64] (repeat 100 (byte \c))))
     (round-trip (fill-string 255 \d)
@@ -135,11 +146,16 @@
 (deftest bin-test
   (testing "bin 8"
     (round-trip (byte-array 0) [0xc4 0x00])
+    (round-trip-raw (byte-array 0) [0xa0] nil)
     (round-trip (unsigned-byte-array [0x80]) [0xc4 0x01 0x80])
     (round-trip (unsigned-byte-array (repeat 32 0x80)) (concat [0xc4 0x20] (repeat 32 0x80)))
     (round-trip (unsigned-byte-array (repeat 255 0x80)) (concat [0xc4 0xff] (repeat 255 0x80))))
   (testing "bin 16"
-    (round-trip (unsigned-byte-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80))))
+    (round-trip (unsigned-byte-array (repeat 256 0x80)) (concat [0xc5 0x01 0x00] (repeat 256 0x80)))
+    (round-trip-raw
+     (unsigned-byte-array (repeat 256 0x80))
+     (concat [0xda 0x01 0x00] (repeat 256 0x80))
+     (unsigned-byte-array (repeat 256 0x80))))
   (testing "bin 32"
     (round-trip (unsigned-byte-array (repeat 65536 0x80))
                 (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
@@ -187,7 +203,8 @@
     (round-trip '() [0x90])
     (round-trip [] [0x90])
     (round-trip [[]] [0x91 0x90])
-    (round-trip [5 "abc", true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
+    (round-trip [5 "abc" true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3])
+    (round-trip-raw [5 "abc" true] [0x93 0x05 0xa3 0x61 0x62 0x63 0xc3] [5 (.getBytes "abc") true])
     (round-trip [true 1 (msg/->Ext 100 (.getBytes "foo")) 0xff {1 false 2 "abc"} (unsigned-byte-array [0x80]) [1 2 3] "abc"]
                 [0x98 0xc3 0x1 0xc7 0x3 0x64 0x66 0x6f 0x6f 0xcc 0xff 0x82 0x1 0xc2 0x2 0xa3 0x61 0x62 0x63 0xc4 0x1 0x80 0x93 0x1 0x2 0x3 0xa3 0x61 0x62 0x63]))
   (testing "array 16"
@@ -201,6 +218,9 @@
 (deftest map-test
   (testing "fixmap"
     (round-trip {} [0x80])
+    (round-trip-raw {(byte-array 0) [{"key" (byte-array 0)}]}
+                    [0x81 0xa0 0x91 0x81 0xa3 0x6b 0x65 0x79 0xa0]
+                    {nil [{(.getBytes "key") nil}]})
     (round-trip {1 true 2 "abc" 3 (unsigned-byte-array [0x80])}
                 [0x83 0x01 0xc3 0x02 0xa3 0x61 0x62 0x63 0x03 0xc4 0x01 0x80])
     (round-trip {"abc" 5} [0x81 0xa3 0x61 0x62 0x63 0x05])

@@ -10,8 +10,8 @@
              "[-1, -128]: reserved for future pre-defined extensions.")
      (do
        (extend-protocol Packable ~class
-                        (pack-stream [~@pack-args ^java.io.DataOutput s#]
-                          (pack-stream (->Ext type# ~pack) s#)))
+                        (packable-pack [~@pack-args ^java.io.DataOutput s# opts#]
+                          (packable-pack (->Ext type# ~pack) s# opts#)))
        (defmethod refine-ext type# [ext#]
          (let [~@unpack-args (:data ext#)]
            ~unpack)))))
