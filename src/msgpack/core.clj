@@ -9,15 +9,9 @@
   msgpack-charset
   (Charset/forName "UTF-8"))
 
-(declare pack unpack unpack-stream)
-
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
   (packable-pack [this data-output opts]))
-
-(defn pack-stream
-  ([this data-output] (packable-pack this data-output nil))
-  ([this data-output opts] (packable-pack this data-output opts)))
 
 ;; MessagePack allows applications to define application-specific types using
 ;; the Extended type. Extended type consists of an integer and a byte array
@@ -95,7 +89,7 @@
 
 (defn- pack-coll
   [coll ^java.io.DataOutput s opts]
-  (doseq [item coll] (pack-stream item s opts)))
+  (doseq [item coll] (packable-pack item s opts)))
 
 (extend-protocol Packable
   nil
@@ -212,6 +206,10 @@
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
+(defn pack-stream
+  ([this data-output] (packable-pack this data-output nil))
+  ([this data-output opts] (packable-pack this data-output opts)))
+
 (defn pack
   ([obj] (pack obj nil))
   ([obj opts]
@@ -258,6 +256,8 @@
   :type)
 
 (defmethod refine-ext :default [ext] ext)
+
+(declare unpack-stream)
 
 (defn- unpack-ext [n ^java.io.DataInput data-input]
   (refine-ext
