@@ -13,10 +13,11 @@
 
 (defprotocol Packable
   "Objects that can be serialized as MessagePack types"
-  (pack-stream [this data-output opts]))
+  (packable-pack [this data-output opts]))
 
-(defn pack-stream [this data-output]
-  (pack-stream this data-output nil))
+(defn pack-stream
+  ([this data-output] (packable-pack this data-output nil))
+  ([this data-output opts] (packable-pack this data-output opts)))
 
 ;; MessagePack allows applications to define application-specific types using
 ;; the Extended type. Extended type consists of an integer and a byte array
@@ -98,49 +99,49 @@
 
 (extend-protocol Packable
   nil
-  (pack-stream
+  (packable-pack
     [_ ^java.io.DataOutput s _]
     (.writeByte s 0xc0))
 
   java.lang.Boolean
-  (pack-stream
+  (packable-pack
     [bool ^java.io.DataOutput s _]
     (if bool
       (.writeByte s 0xc3)
       (.writeByte s 0xc2)))
 
   java.lang.Byte
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Short
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Integer
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Long
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.math.BigInteger
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   clojure.lang.BigInt
-  (pack-stream [n ^java.io.DataOutput s _] (pack-int n s))
+  (packable-pack [n ^java.io.DataOutput s _] (pack-int n s))
 
   java.lang.Float
-  (pack-stream [f ^java.io.DataOutput s _]
+  (packable-pack [f ^java.io.DataOutput s _]
     (do (.writeByte s 0xca) (.writeFloat s f)))
 
   java.lang.Double
-  (pack-stream [d ^java.io.DataOutput s _]
+  (packable-pack [d ^java.io.DataOutput s _]
     (do (.writeByte s 0xcb) (.writeDouble s d)))
 
   java.math.BigDecimal
-  (pack-stream [d ^java.io.DataOutput s opts]
-    (pack-stream (.doubleValue d) s opts))
+  (packable-pack [d ^java.io.DataOutput s opts]
+    (packable-pack (.doubleValue d) s opts))
 
   java.lang.String
-  (pack-stream
+  (packable-pack
     [str ^java.io.DataOutput s {:keys [raw]}]
     (let [bytes (.getBytes ^String str msgpack-charset)]
       (if raw
@@ -148,7 +149,7 @@
         (pack-str bytes s))))
 
   Ext
-  (pack-stream
+  (packable-pack
     [e ^java.io.DataOutput s _]
     (let [type (:type e)
           ^bytes data (:data e)
@@ -167,7 +168,7 @@
         (.write s data))))
 
   clojure.lang.Sequential
-  (pack-stream [seq ^java.io.DataOutput s opts]
+  (packable-pack [seq ^java.io.DataOutput s opts]
     (cond-let [len (count seq)]
               (<= len 0xf)
               (do (.writeByte s (bit-or 2r10010000 len)) (pack-coll seq s opts))
@@ -179,7 +180,7 @@
               (do (.writeByte s 0xdd) (.writeInt s len) (pack-coll seq s opts))))
 
   clojure.lang.IPersistentMap
-  (pack-stream [map ^java.io.DataOutput s opts]
+  (packable-pack [map ^java.io.DataOutput s opts]
     (cond-let [len (count map)
                pairs (interleave (keys map) (vals map))]
               (<= len 0xf)
@@ -197,7 +198,7 @@
 ; Array of java.lang.Byte (boxed)
 (extend (class (java.lang.reflect.Array/newInstance Byte 0))
   Packable
-  {:pack-stream
+  {:packable-pack
    (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
      (if raw
        (pack-raw bytes s)
@@ -205,7 +206,7 @@
 
 (extend (Class/forName "[B")
   Packable
-  {:pack-stream
+  {:packable-pack
    (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
      (if raw
        (pack-raw bytes s)
