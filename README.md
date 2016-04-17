@@ -113,7 +113,7 @@ You can also define your own Extended types with `extend-msgpack`.
 
 ### Options
 All pack and unpack functions take an optional map of options:
-* compatibility-mode
+* `:compatibility-mode`
   Serialize/deserialize strings and bytes using the raw-type defined here:
   https://github.com/msgpack/msgpack/blob/master/spec-old.md
 
