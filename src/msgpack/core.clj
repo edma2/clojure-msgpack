@@ -143,7 +143,7 @@
   (pack-stream
     [str ^java.io.DataOutput s {:keys [raw]}]
     (let [bytes (.getBytes ^String str msgpack-charset)]
-      (if raw 
+      (if raw
         (pack-raw bytes s)
         (pack-str bytes s))))
 
@@ -199,7 +199,7 @@
   Packable
   {:pack-stream
    (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
-     (if raw 
+     (if raw
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
@@ -207,7 +207,7 @@
   Packable
   {:pack-stream
    (fn [bytes ^java.io.DataOutput s {:keys [raw]}]
-     (if raw 
+     (if raw
        (pack-raw bytes s)
        (pack-bytes bytes s)))})
 
