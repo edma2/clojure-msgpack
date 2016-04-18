@@ -8,8 +8,8 @@ dependencies.
 ## Installation
 
 Get it from clojars: https://clojars.org/clojure-msgpack
-![Clojars Project](http://clojars.org/clojure-msgpack/latest-version.svg)
-![Build Status](https://travis-ci.org/edma2/clojure-msgpack.svg?branch=master)
+[![Clojars Project](http://clojars.org/clojure-msgpack/latest-version.svg)](https://clojars.org/clojure-msgpack)
+[![Build Status](https://travis-ci.org/edma2/clojure-msgpack.svg?branch=master)](https://travis-ci.org/edma2/clojure-msgpack)
 
 ## Usage
 
