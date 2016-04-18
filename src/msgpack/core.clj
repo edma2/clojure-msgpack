@@ -364,18 +364,14 @@
              (= byte 0xdf)
              (unpack-map (read-uint32 data-input) data-input opts))))
 
-(defn- to-byte-array
-  [bytes]
-  (if (instance? (Class/forName "[B") bytes)
-    bytes
-    (byte-array bytes)))
-
 (defn unpack
-  "Unpack bytes as MessagePack object."
-  ([bytes] (unpack bytes nil))
-  ([bytes opts]
-   (let [data-input (-> bytes
-                        to-byte-array
-                        ByteArrayInputStream.
-                        DataInputStream.)]
-     (unpack-stream data-input opts))))
+  "Deserialize MessagePack-formatted bytes to an application value. Argument
+  type can be either java.io.DataInput, java.io.InputStream, or byte array.
+  Other types are coerced to a byte array."
+  ([obj] (unpack obj nil))
+  ([obj opts]
+   (condp instance? obj
+     java.io.DataInput (unpack-stream obj opts)
+     java.io.InputStream (unpack (DataInputStream. obj) opts)
+     class-of-primitive-byte-array (unpack (ByteArrayInputStream. obj) opts)
+     (unpack (byte-array obj) opts))))
