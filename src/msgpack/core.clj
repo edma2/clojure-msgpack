@@ -199,10 +199,8 @@
 (extend class-of-byte-array
   Packable
   {:packable-pack
-   (fn [bytes ^java.io.DataOutput s {:keys [compatibility-mode]}]
-     (if compatibility-mode
-       (pack-raw bytes s)
-       (pack-bytes bytes s)))})
+   (fn [a ^java.io.DataOutput s opts]
+     (packable-pack (byte-array a) s opts))})
 
 (extend class-of-primitive-byte-array
   Packable
