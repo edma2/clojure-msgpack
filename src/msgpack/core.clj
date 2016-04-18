@@ -215,6 +215,9 @@
        (pack-bytes bytes s)))})
 
 (defn pack-stream
+  "Serialize application value as a stream of MessagePack-formatted bytes.
+  Argument type can be either java.io.DataOutput or java.io.OutputStream. Any
+  other type is an error."
   ([this stream] (pack-stream this stream nil))
   ([this stream opts]
    (condp instance? stream
@@ -222,6 +225,7 @@
      OutputStream (pack-stream this (DataOutputStream. stream) opts))))
 
 (defn pack
+  "Serialize application value as a MessagePack-formatted byte array"
   ([obj] (pack obj nil))
   ([obj opts]
    (let [stream (ByteArrayOutputStream.)]
