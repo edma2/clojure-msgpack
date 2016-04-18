@@ -1,4 +1,4 @@
-(defproject clojure-msgpack "1.1.3"
+(defproject clojure-msgpack "1.2.0"
   :description "A lightweight Clojure implementation of the MessagePack spec."
   :url "https://github.com/edma2/clojure-msgpack"
   :license {:name "The MIT License (MIT)"
