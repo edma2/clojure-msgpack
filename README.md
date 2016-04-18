@@ -27,19 +27,29 @@ Get it from clojars: https://clojars.org/clojure-msgpack
 `````
 
 ### Streaming
-* ```unpack-stream```: Takes a [java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html) as an argument. Usually you wrap this around an [InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html)
-* ```pack-stream```: Takes a [java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html) as an argument. Usually you wrap this around an [OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
+`clojure-msgpack` provides a streaming API for situations where it is more
+convenient or efficient to work with byte streams instead of fixed byte arrays
+(e.g. size of object is not known ahead of time).
+
+The streaming counterpart to `msgpack.core/pack` is `msgpack.core/pack-stream`
+which returns nil and accepts either
+[java.io.OutputStream](http://docs.oracle.com/javase/7/docs/api/java/io/OutputStream.html)
+or
+[java.io.DataOutput](http://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html)
+as an additional argument.
+
+`msgpack.core/unpack` is in "streaming mode" when the argument is of type
+[java.io.DataInput](http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html)
+or
+[java.io.InputStream](http://docs.oracle.com/javase/7/docs/api/java/io/InputStream.html).
+
 ```clojure
 (use 'clojure.java.io)
-(import '(java.io.DataOutputStream) '(java.io.DataInputStream))
 
-(with-open [o (output-stream "test.dat")]
-  (let [data-output (java.io.DataOutputStream. o)]
-    (msg/pack-stream {:compact true :schema 0} data-output)))
+(with-open [s (output-stream "test.dat")]
+  (msg/pack-stream {:compact true :schema 0} s))
 
-(with-open [i (input-stream "test.dat")]
-  (let [data-input (java.io.DataInputStream. i)]
-    (msg/unpack-stream data-input)))
+(with-open [s (input-stream "test.dat")] (msg/unpack s))
 ; => {:schema 0, :compact true}
 ```
 
