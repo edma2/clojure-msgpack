@@ -49,6 +49,16 @@
      (is (= packed-bytes# (seq (msg/pack obj# {:compatibility-mode true}))))
      (is (= (normalize unpacked-obj#) (normalize (msg/unpack packed-bytes# {:compatibility-mode true}))))))
 
+(defmacro round-trip-cljs
+  [obj expected-bytes]
+  `(let [obj# ~obj
+         bytes# (msgpack.core/pack obj#)
+         clj-bytes# ~(->> obj eval msg/pack unsigned-byte-array (map #(bit-and % 0xff)) vec)
+         unpacked# (msgpack.core/unpack bytes#)]
+     (cljs.test/is (cljs.core/= ~expected-bytes (seq bytes#)))
+     (cljs.test/is (cljs.core/= (normalize-cljs obj#) (normalize-cljs unpacked#)))
+     (cljs.test/is (cljs.core/= clj-bytes# (seq bytes#)))))
+
 (deftest nil-test
   (testing "nil"
     (round-trip nil [0xc0])))
