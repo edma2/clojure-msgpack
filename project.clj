@@ -4,7 +4,8 @@
   :license {:name "The MIT License (MIT)"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.8.51"]]
+                 [org.clojure/clojurescript "1.8.51"]
+                 [doo "0.1.6"]]
   :global-vars {*warn-on-reflection* true}
   :scm {:name "git"
         :url "https://github.com/edma2/clojure-msgpack"}
@@ -17,16 +18,27 @@
               :eastwood {:config-files ["eastwood.clj"]}}
    :test {:dependencies [[org.clojure/test.check "0.9.0"]]}}
   :plugins [[lein-cljsbuild "1.1.1"]
-            [lein-figwheel "0.5.0-3"]]
+            [lein-figwheel "0.5.0-3"]
+            [lein-doo "0.1.6"]]
   :figwheel
   {:nrepl-port 7888}
   :cljsbuild
   {:builds
-   [{:id "test"
+   [{:id "dev"
      :source-paths ["src" "test"]
      :figwheel true
      :compiler
      {:main "msgpack.core-test"
       :asset-path "js/out"
+      :optimizations :none
+      :output-to "resources/public/js/msgpack.js"
+      :output-dir "resources/public/js/out" }}
+    {:id "test"
+     :source-paths ["src" "test"]
+     :figwheel true
+     :compiler
+     {:main "msgpack.runner"
+      :asset-path "js/out"
+      :optimizations :simple
       :output-to "resources/public/js/msgpack.js"
       :output-dir "resources/public/js/out" }}]})

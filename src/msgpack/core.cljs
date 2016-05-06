@@ -346,6 +346,12 @@
   (packable-size [m]
     (pack-sequential-size (count m) (concat (keys m) (vals m))))
   (packable-pack [m w]
+    (pack-map (count m) m w))
+
+  cljs.core/PersistentTreeMap
+  (packable-size [m]
+    (pack-sequential-size (count m) (concat (keys m) (vals m))))
+  (packable-pack [m w]
     (pack-map (count m) m w)))
 
 (declare unpack-data)
