@@ -44,7 +44,10 @@
   (read-float  [this] (offsetr! this 4 (.getFloat32 view offset)))
   (read-double [this] (offsetr! this 8 (.getFloat64 view offset)))
   (read-bytes  [this n]
-    (offsetr! this n (-> (.-buffer view) (js/Uint8ClampedArray. offset n))))
+    (let [copy  (js/Uint8ClampedArray. n)
+          bytes (js/Uint8ClampedArray. (.-buffer view) offset n)]
+      (.set copy bytes)
+      (offsetr! this n copy)))
   (rewind [this n]
     (set! offset (- offset n))
     this))
@@ -173,6 +176,12 @@
   "Objects that can be serialized as MessagePack types"
   (packable-size [this])
   (packable-pack [this writer]))
+
+;; MessagePack allows applications to define application-specific types using
+;; the Extended type. Extended type consists of an integer and a byte array
+;; where the integer represents a kind of types and the byte array represents
+;; data.
+(defrecord Ext [type data])
 
 (defn- pack-sequential-size
   [l xs]
@@ -312,6 +321,33 @@
   (packable-pack [x w]
     (pack-bytes (js/Uint8ClampedArray. x) w))
 
+  Ext
+  (packable-size [e]
+    (let [data (:data e)
+          len  (.-byteLength data)]
+      (+ 1 len
+         (cond
+           (<= len 16)         1
+           (<= len 0xff)       2
+           (<= len 0xffff)     3
+           (<= len 0xffffffff) 5))))
+  (packable-pack [e w]
+    (let [type (:type e)
+          data (:data e)
+          len  (.-byteLength data)]
+      (do
+        (cond
+          (= len 1)  (write-uint8 w 0xd4)
+          (= len 2)  (write-uint8 w 0xd5)
+          (= len 4)  (write-uint8 w 0xd6)
+          (= len 8)  (write-uint8 w 0xd7)
+          (= len 16) (write-uint8 w 0xd8)
+          (<= len 0xff) (do (write-uint8 w 0xc7) (write-uint8 w len))
+          (<= len 0xffff) (do (write-uint8 w 0xc8) (write-uint16 w len))
+          (<= len 0xffffffff) (do (write-uint8 w 0xc9) (write-uint32 w len)))
+        (write-uint8 w type)
+        (write-bytes w (js/Uint8ClampedArray. data)))))
+
   cljs.core/EmptyList
   (packable-size [xs]
     (pack-sequential-size (count xs) xs))
@@ -353,6 +389,16 @@
     (pack-sequential-size (count m) (concat (keys m) (vals m))))
   (packable-pack [m w]
     (pack-map (count m) m w)))
+
+(defmulti refine-ext
+  "Refine Extended type to an application-specific type."
+  :type)
+
+(defmethod refine-ext :default [ext] ext)
+
+(defn- unpack-ext [n ^DataViewReader r]
+  (refine-ext
+   (->Ext (read-uint8 r) (read-bytes r n))))
 
 (declare unpack-data)
 
@@ -436,6 +482,23 @@
       ;; map 32
       (= t 0xdf)
       (unpack-map r (read-uint32 r))
+
+      ;; ext format family
+      ;;
+      (= t 0xd4) (unpack-ext 1  r)
+      (= t 0xd5) (unpack-ext 2  r)
+      (= t 0xd6) (unpack-ext 4  r)
+      (= t 0xd7) (unpack-ext 8  r)
+      (= t 0xd8) (unpack-ext 16 r)
+      ;; ext 8
+      (= t 0xc7)
+      (unpack-ext (read-uint8 r) r)
+      ;; ext 16
+      (= t 0xc8)
+      (unpack-ext (read-uint16 r) r)
+      ;; ext 32
+      (= t 0xc9)
+      (unpack-ext (read-uint32 r) r)
 
       true (throw (js/TypeError (str "Can't decode tag 0x" (.toString t 16)))))))
 

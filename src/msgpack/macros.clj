@@ -15,3 +15,20 @@
        (defmethod refine-ext type# [ext#]
          (let [~@unpack-args (:data ext#)]
            ~unpack)))))
+
+(defmacro extend-msgpack-cljs
+  [class type pack-args pack unpack-args unpack]
+  `(let [type# ~type]
+     (assert (<= 0 type# 127) "[-1, -128]: reserved for future pre-defined extensions.")
+     (do
+
+       (extend-protocol msgpack.core/Packable
+         ~class
+         (msgpack.core/packable-pack [~@pack-args ^DataViewWriter w#]
+           (msgpack.core/packable-pack (->Ext type# ~pack) w#))
+         (msgpack.core/packable-size [~@pack-args]
+           (msgpack.core/packable-size (->Ext type# ~pack))))
+
+       (defmethod msgpack.core/refine-ext type# [ext#]
+         (let [~@unpack-args (-> ext# :data .-buffer)]
+           ~unpack)))))

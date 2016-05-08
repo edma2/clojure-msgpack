@@ -3,6 +3,7 @@
   (:require-macros
    [msgpack.core-test :refer [round-trip-cljs]])
   (:require [msgpack.core :as msg]
+            [msgpack.cljs-extensions]
             [clojure.walk :refer [postwalk]]
             [cljs.test :refer-macros [deftest is testing run-tests]]
             [cljs.test :as t]))
@@ -127,6 +128,14 @@
   (testing "bin 32"
     (round-trip-cljs (unsigned-byte-array (repeat 65536 0x80))
                      (concat [0xc6 0x00 0x01 0x00 0x00] (repeat 65536 0x80)))))
+
+(deftest clojurescript-test
+  (testing "cljs.core.Keyword"
+    (round-trip-cljs :abc [0xd6 0x3 0xa3 0x61 0x62 0x63]))
+  (testing "cljs.core.Symbol"
+    (round-trip-cljs 'abc [0xd6 0x4 0xa3 0x61 0x62 0x63]))
+  (testing "cljs.core.PersistentHashSet"
+    (round-trip-cljs #{} [0xd4 0x7 0xc0])))
 
 (deftest array-test
   (testing "fixarray"
