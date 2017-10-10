@@ -281,7 +281,7 @@
          v (transient [])]
     (if (< i n)
       (recur
-        (inc i)
+        (unchecked-inc i)
         (conj! v (unpack-stream data-input opts)))
       (persistent! v))))
 
@@ -290,7 +290,7 @@
          m (transient {})]
     (if (< i n)
       (recur
-        (inc i)
+        (unchecked-inc i)
         (assoc! m
           (unpack-stream data-input opts)
           (unpack-stream data-input opts)))
