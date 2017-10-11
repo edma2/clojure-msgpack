@@ -277,10 +277,24 @@
    (->Ext (.readByte data-input) (read-bytes n data-input))))
 
 (defn- unpack-n [n ^DataInput data-input opts]
-  (doall (for [_ (range n)] (unpack-stream data-input opts))))
+  (loop [i 0
+         v (transient [])]
+    (if (< i n)
+      (recur
+        (unchecked-inc i)
+        (conj! v (unpack-stream data-input opts)))
+      (persistent! v))))
 
 (defn- unpack-map [n ^DataInput data-input opts]
-  (apply hash-map (unpack-n (* 2 n) data-input opts)))
+  (loop [i 0
+         m (transient {})]
+    (if (< i n)
+      (recur
+        (unchecked-inc i)
+        (assoc! m
+          (unpack-stream data-input opts)
+          (unpack-stream data-input opts)))
+      (persistent! m))))
 
 (defn unpack-stream
   ([^DataInput data-input] (unpack-stream data-input nil))
